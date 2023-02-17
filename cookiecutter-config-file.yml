@@ -1,0 +1,13 @@
+# This file contains values from Cookiecutter
+
+default_context:
+  project_name: "chronus"
+  project_description: "A energy scheduling model, build for HPC."
+  organization: "chronus"
+  license: "MIT"
+  minimal_python_version: 3.9
+  github_name: "AndersSpringborg"
+  email: "aaspringborg@gmail.com"
+  version: "0.1.0"
+  line_length: "100"
+  create_example_template: "cli"
