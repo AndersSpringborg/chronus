@@ -14,10 +14,10 @@ repository = "https://github.com/AndersSpringborg/chronus"
 homepage = "https://github.com/AndersSpringborg/chronus"
 
 # Keywords description https://python-poetry.org/docs/pyproject/#keywords
-keywords = [] 
+keywords = []
 
 # Pypi classifiers: https://pypi.org/classifiers/
-classifiers = [ 
+classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "Operating System :: OS Independent",
@@ -54,6 +54,8 @@ coverage = "^6.1.2"
 coverage-badge = "^1.1.0"
 pytest-html = "^3.1.1"
 pytest-cov = "^3.0.0"
+pytest-mock = "^3.9.1"
+dataclasses-json = "^0.5.7"
 
 [tool.black]
 # https://github.com/psf/black
