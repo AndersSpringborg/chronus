@@ -29,14 +29,14 @@ jobs:
         poetry config virtualenvs.in-project true
         poetry install
 
-    - name: Run style checks
+    - name: Run.py style checks
       run: |
         make check-codestyle
 
-    - name: Run tests
+    - name: Run.py tests
       run: |
         make test
 
-    - name: Run safety checks
+    - name: Run.py safety checks
       run: |
         echo "skipped as mypy uses unsafe depedency (py)" # make check-safety
