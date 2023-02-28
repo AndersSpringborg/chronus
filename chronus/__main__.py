@@ -1,21 +1,21 @@
-# type: ignore[attr-defined]
-from time import sleep
 import logging
-from rich.logging import RichHandler
-
 from enum import Enum
 from random import choice
+from time import sleep
 
 import typer
 from rich.console import Console
+from rich.logging import RichHandler
 
 from chronus import version
+from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
-from chronus.example import hello
-from chronus.model.Run import Run
+from chronus.SystemIntegration.repository import Repository
+
+name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
+name = "chronus"
 
 
-name_as_grad = '^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m'
 class Color(str, Enum):
     white = "white"
     red = "red"
@@ -54,7 +54,8 @@ class Config:
     fan_speed_step: int = 1_000
     fan_speed_default: int = 1_000
 
-class StandardConfig():
+
+class StandardConfig:
     """Standard configuration for the suite."""
 
     def __init__(self):
@@ -63,20 +64,9 @@ class StandardConfig():
     def __iter__(self):
         return range(2).__iter__()
 
-
     def color(self) -> str:
         """Get the color of the suite."""
         return self._color
-
-
-class Repository:
-    def __init__(self):
-        pass
-
-    def save(self, run: Run):
-        raise NotImplementedError("This is an abstract class.")
-        pass
-
 
 
 class Suite:
@@ -88,7 +78,6 @@ class Suite:
         self.hpcg = HpcgService.with_path(path)
         self._path = path
         self._repository = repository
-
 
     def run(self) -> None:
         """Run the suite."""
@@ -103,12 +92,9 @@ class Suite:
         sleep(1)
 
 
-
-
 FORMAT = "%(message)s"
-logging.basicConfig(
-    level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
-)
+logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()])
+
 
 @app.command(name="")
 def main(
@@ -118,7 +104,7 @@ def main(
         "--hpcg-path",
         "--xhpcg-path",
         case_sensitive=False,
-        help = "The path to hpcg or xhpcg binary."
+        help="The path to hpcg or xhpcg binary.",
     ),
     print_version: bool = typer.Option(
         None,
@@ -129,9 +115,9 @@ def main(
         help="Prints the version of the chronus package.",
     ),
 ) -> None:
-    console.print(name_as_grad)
+    console.print(f"{name}")
     """Run a suite of tests on a HPCG installation."""
-    suite = Suite(path)
+    suite = Suite(path, FileRepository("../out/chronus_run_save.json"))
     suite.run()
 
 

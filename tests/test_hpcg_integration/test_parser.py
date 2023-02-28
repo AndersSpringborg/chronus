@@ -6,6 +6,7 @@ from chronus.SystemIntegration.hpcg import HpcgService
 class TestHPCGRunner:
     def __init__(self):
         self._output = ""
+
     def run(self):
         return self._output
 
@@ -21,10 +22,13 @@ class TestHPCGRunner:
         with open(file_path) as f:
             runner._output = f.read()
         return runner
+
+
 def test_import_works():
     """Example test with parametrization."""
     hpcg_service = HpcgService()
     assert hpcg_service
+
 
 @pytest.mark.parametrize(
     ("gflops"),
@@ -35,11 +39,14 @@ def test_import_works():
     ],
 )
 def test_parse_gflops(gflops):
-    test_runner = TestHPCGRunner.from_string(f"Final Summary::HPCG result is VALID with a GFLOP/s rating of={gflops}")
+    test_runner = TestHPCGRunner.from_string(
+        f"Final Summary::HPCG result is VALID with a GFLOP/s rating of={gflops}"
+    )
     hpcg_service = HpcgService(test_runner)
-    hpcg_service.run()
+    run = hpcg_service.run()
 
-    assert hpcg_service.gflops() == gflops
+    assert run.gflops == gflops
+
 
 def test_reads_full_output():
     test_runner = TestHPCGRunner.from_file("test_hpcg_integration/outputs/hpcg-summary.txt")
@@ -48,9 +55,10 @@ def test_reads_full_output():
 
     assert len(hpcg_service._output.split("\n")) == 127
 
+
 def test_parse_gflops_from_file():
     test_runner = TestHPCGRunner.from_file("test_hpcg_integration/outputs/hpcg-summary.txt")
     hpcg_service = HpcgService(test_runner)
-    hpcg_service.run()
+    run = hpcg_service.run()
 
-    assert hpcg_service.gflops() == 15.3024
+    assert run.gflops == 15.3024

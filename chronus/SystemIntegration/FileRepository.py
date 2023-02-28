@@ -1,8 +1,10 @@
-import io
 from typing import IO, Callable
 
-from chronus.__main__ import Repository
+import io
+from pprint import pprint
+
 from chronus.model.Run import Run
+from chronus.SystemIntegration.repository import Repository
 
 
 class FileRepository(Repository):
@@ -25,20 +27,16 @@ class FileRepository(Repository):
             if first_two_chars == "[]":
                 insert_comma = False
 
-
         # remove trailing ']'
         with self._file_factory(self._path, "rb+") as f:
             f.seek(-1, 2)
             f.truncate()
-
-
 
         with self._file_factory(self._path, "a") as f:
             if insert_comma:
                 f.write(",")
             f.write(run.to_json())
             f.write("]")
-
 
     def _prepare_file(self, path):
         with self._file_factory(path, "x") as f:
