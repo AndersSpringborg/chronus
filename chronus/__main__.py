@@ -15,6 +15,7 @@ from chronus.example import hello
 from chronus.model.Run import Run
 
 
+name_as_grad = '^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m'
 class Color(str, Enum):
     white = "white"
     red = "red"
@@ -128,6 +129,7 @@ def main(
         help="Prints the version of the chronus package.",
     ),
 ) -> None:
+    console.print(name_as_grad)
     """Run a suite of tests on a HPCG installation."""
     suite = Suite(path)
     suite.run()
