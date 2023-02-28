@@ -1,6 +1,10 @@
 # chronus
 
-<div align="center">
+<div style="text-align: center">
+  <img src="assets/images/logo.png" alt="Chronus greek god head coin isometric concept, transparent background, aspect ration 1:1" width="400" height="400">
+</div>
+<p style="text-align: center"> A energy scheduling model, build for HPC.</p>
+<div style="text-align: center;">
 
 [![Build status](https://github.com/AndersSpringborg/chronus/workflows/build/badge.svg?branch=master&event=push)](https://github.com/AndersSpringborg/chronus/actions?query=workflow%3Abuild)
 [![Python Version](https://img.shields.io/pypi/pyversions/chronus.svg)](https://pypi.org/project/chronus/)
@@ -13,9 +17,17 @@
 [![License](https://img.shields.io/github/license/AndersSpringborg/chronus)](https://github.com/AndersSpringborg/chronus/blob/master/LICENSE)
 ![Coverage Report](assets/images/coverage.svg)
 
-A energy scheduling model, build for HPC.
 
 </div>
+
+## 📖 About
+This is both a library and a CLI application for scheduling energy consumption. The library is build for slurm, and the CLI application is build for the end user.
+
+## 🚀 Installation
+```
+dnf install chronus
+chronus --help
+```
 
 ### Poetry
 
