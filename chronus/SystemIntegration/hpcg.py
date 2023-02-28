@@ -1,6 +1,10 @@
+import logging
+import os
 import re
+from pprint import pprint
 
 from chronus.model.Run import Run
+
 
 class HpcgService:
 
@@ -33,11 +37,28 @@ class HpcgService:
         return cls(runner)
 
 
-
 class HpcgRunner:
+    _run_id: int
 
     def __init__(self, path: str = None):
         self._path = path
+        self._run_id = 0
 
     def run(self) -> str:
-        return "Final Summary::HPCG result is VALID with a GFLOP/s rating of=15.3024"
+        # run system command
+        import subprocess
+
+        output_path = "./../out/run_output" + str(self._run_id) + ".txt"
+        output = subprocess.call(["sh", "./../hpcg_debug.sh", output_path])
+        # print current working directory
+        print(output)
+
+        # check if file exists
+        if os.path.exists(output_path):
+            print("File exists")
+        else:
+            print("File does not exist")
+        self._run_id += 1
+
+        file_output = "".join(open(output_path, "r").readlines())
+        return file_output
