@@ -1,13 +1,20 @@
+from typing import List
+
+import json
 import logging
+import os
 from enum import Enum
-from random import choice
+from random import choice, randrange, uniform
 from time import sleep
 
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.pretty import pprint
 
 from chronus import version
+from chronus.model.Run import Run
+from chronus.model.svm import config_model
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.repository import Repository
@@ -119,6 +126,63 @@ def main(
     """Run a suite of tests on a HPCG installation."""
     suite = Suite(path, FileRepository("../out/chronus_run_save.json"))
     suite.run()
+
+
+def fake_data() -> list[Run]:
+    # check if data set is cached in file
+    file_path = "/home/anders/projects/chronus/out/chronus_fake_run.json"
+    if os.path.isfile(file_path):
+        data = json.load(open(file_path))
+        return [Run.from_dict(d) for d in data]
+
+    runs = []
+    fan_speeds = [1000, 1500, 2000, 2500]
+    cpu_temps = [50.0, 60.0, 70.0, 80.0]
+    cpu_cores = [1, 2, 4, 8, 16, 32, 48, 64]
+    gflops_range = (10.0, 500.0)
+    watts_range = (50, 250)
+    for i in range(50):
+        watts = randrange(*watts_range)
+        core_count = choice(cpu_cores)
+        core_frequency = uniform(1, 3.6)
+        gflops = core_count * core_frequency
+        runs.append(Run(0, 0, core_count, core_frequency, int(gflops), watts))
+
+    # save data for caching
+    json.dump([r.to_dict() for r in runs], open(file_path, "w"))
+
+    return runs
+
+
+@app.command(name="plot")
+def plot():
+    data = fake_data()
+    # 3d plot with watt, gflops, cpu cores
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from mpl_toolkits.mplot3d import Axes3D
+
+    x = [r.watts for r in data]
+    y = [r.cpu_cores for r in data]
+    z = [r.gflops for r in data]
+
+    # Plot the 3D scatter plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    ax.scatter(x, y, z, c=z, cmap="hot", marker="o")
+    ax.set_xlabel("Watts")
+    ax.set_ylabel("Core Count")
+    ax.set_zlabel("GFLOPS")
+    plt.show()
+
+
+@app.command(name="solver")
+def solver():
+    data = fake_data()
+
+    best_config = config_model(data)
+
+    pprint(best_config)
 
 
 if __name__ == "__main__":
