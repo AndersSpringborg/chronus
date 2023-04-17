@@ -1,7 +1,7 @@
 # chronus
 
 <div style="text-align: center">
-  <img src="assets/images/logo.png" alt="Chronus greek god head coin isometric concept, transparent background, aspect ration 1:1" width="400" height="400">
+  <img src="https://raw.githubusercontent.com/AndersSpringborg/chronus/main/assets/images/logo.png" alt="Chronus greek god head coin isometric concept, transparent background, aspect ration 1:1" width="400" height="400">
 </div>
 <p style="text-align: center"> A energy scheduling model, build for HPC.</p>
 <div style="text-align: center;">
