@@ -75,6 +75,7 @@ docker-build:
 	@echo Building docker $(IMAGE):$(VERSION) ...
 	docker build \
 		-t $(IMAGE):$(VERSION) . \
+		--target prod \
 		-f ./docker/Dockerfile --no-cache
 
 # Example: make docker-remove VERSION=latest
@@ -111,3 +112,4 @@ build-remove:
 
 .PHONY: cleanup
 cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove
+

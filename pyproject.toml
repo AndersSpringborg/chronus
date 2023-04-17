@@ -36,6 +36,8 @@ python = "^3.9"
 
 typer = {extras = ["all"], version = "^0.4.0"}
 rich = "^10.14.0"
+scikit-learn = "^1.2.1"
+matplotlib = "^3.7.1"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.5"
@@ -53,6 +55,8 @@ coverage = "^7.2.3"
 coverage-badge = "^1.1.0"
 pytest-html = "^3.2.0"
 pytest-cov = "^4.0.0"
+pytest-mock = "^3.9.1"
+dataclasses-json = "^0.5.7"
 
 [tool.black]
 # https://github.com/psf/black
