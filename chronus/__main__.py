@@ -1,3 +1,4 @@
+import json
 import logging
 from enum import Enum
 from random import choice
@@ -13,7 +14,7 @@ from chronus.model.svm import config_model
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.repository import Repository
-from chronus.vis import plot_energy
+from chronus.vis import plot_energy, fake_data
 
 name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
 name = "chronus"
@@ -137,6 +138,15 @@ def solver():
 
     pprint(best_config)
 
+@app.command(name="slurm-config-json")
+def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
+
+    config = {
+        "cores": 2,
+        "frequency": 2_200_000,
+    }
+
+    print(json.dumps(config))
 
 if __name__ == "__main__":
     app()
