@@ -6,8 +6,7 @@ from chronus.SystemIntegration.repository import Repository
 
 
 class TestRepository(Repository):
-
-    saved_runs: List[Run]
+    saved_runs: list[Run]
 
     def __init__(self):
         super().__init__()
