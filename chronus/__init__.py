@@ -1,4 +1,3 @@
-# type: ignore[attr-defined]
 """A energy scheduling model, build for HPC."""
 
 import sys

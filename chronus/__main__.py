@@ -1,4 +1,3 @@
-# type: ignore[attr-defined]
 from typing import Optional
 
 from enum import Enum
@@ -61,6 +60,12 @@ def main(
 
     greeting: str = hello(name)
     console.print(f"[bold {color}]{greeting}[/]")
+
+
+@app.command(name="solver")
+def solver():
+    """Run the solver."""
+
 
 
 if __name__ == "__main__":
