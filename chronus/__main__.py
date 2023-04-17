@@ -124,8 +124,6 @@ def main(
     suite.run()
 
 
-
-
 @app.command(name="plot")
 def plot():
     plot_energy()
