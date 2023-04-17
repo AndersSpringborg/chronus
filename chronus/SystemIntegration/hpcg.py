@@ -7,7 +7,6 @@ from chronus.model.Run import Run
 
 
 class HpcgService:
-
     _output: str
 
     def __init__(self, runner=None):

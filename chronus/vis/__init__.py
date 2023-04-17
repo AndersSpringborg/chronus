@@ -1,13 +1,12 @@
 import json
 import os
-from random import randrange, choice, uniform
+from random import choice, randrange, uniform
 
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
 from chronus.model.Run import Run
-
 
 
 def fake_data() -> list[Run]:
