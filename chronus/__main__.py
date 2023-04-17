@@ -67,6 +67,5 @@ def solver():
     """Run the solver."""
 
 
-
 if __name__ == "__main__":
     app()
