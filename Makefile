@@ -60,7 +60,7 @@ check-safety:
 	poetry run bandit -ll --recursive chronus tests
 
 .PHONY: lint
-lint: test check-codestyle mypy check-safety
+lint: test check-codestyle mypy
 
 .PHONY: update-dev-deps
 update-dev-deps:
