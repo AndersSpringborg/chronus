@@ -1,10 +1,6 @@
-from typing import List
-
-import json
 import logging
-import os
 from enum import Enum
-from random import choice, randrange, uniform
+from random import choice
 from time import sleep
 
 import typer
@@ -13,11 +9,11 @@ from rich.logging import RichHandler
 from rich.pretty import pprint
 
 from chronus import version
-from chronus.model.Run import Run
 from chronus.model.svm import config_model
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.repository import Repository
+from chronus.vis import plot_energy
 
 name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
 name = "chronus"
@@ -128,52 +124,11 @@ def main(
     suite.run()
 
 
-def fake_data() -> list[Run]:
-    # check if data set is cached in file
-    file_path = "/home/anders/projects/chronus/out/chronus_fake_run.json"
-    if os.path.isfile(file_path):
-        data = json.load(open(file_path))
-        return [Run.from_dict(d) for d in data]
-
-    runs = []
-    fan_speeds = [1000, 1500, 2000, 2500]
-    cpu_temps = [50.0, 60.0, 70.0, 80.0]
-    cpu_cores = [1, 2, 4, 8, 16, 32, 48, 64]
-    gflops_range = (10.0, 500.0)
-    watts_range = (50, 250)
-    for i in range(50):
-        watts = randrange(*watts_range)
-        core_count = choice(cpu_cores)
-        core_frequency = uniform(1, 3.6)
-        gflops = core_count * core_frequency
-        runs.append(Run(0, 0, core_count, core_frequency, int(gflops), watts))
-
-    # save data for caching
-    json.dump([r.to_dict() for r in runs], open(file_path, "w"))
-
-    return runs
 
 
 @app.command(name="plot")
 def plot():
-    data = fake_data()
-    # 3d plot with watt, gflops, cpu cores
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from mpl_toolkits.mplot3d import Axes3D
-
-    x = [r.watts for r in data]
-    y = [r.cpu_cores for r in data]
-    z = [r.gflops for r in data]
-
-    # Plot the 3D scatter plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
-    ax.scatter(x, y, z, c=z, cmap="hot", marker="o")
-    ax.set_xlabel("Watts")
-    ax.set_ylabel("Core Count")
-    ax.set_zlabel("GFLOPS")
-    plt.show()
+    plot_energy()
 
 
 @app.command(name="solver")
