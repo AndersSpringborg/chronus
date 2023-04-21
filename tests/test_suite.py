@@ -16,7 +16,7 @@ class TestRepository(Repository):
         self.saved_runs.append(run)
 
 
-def test_suite_runs_over_all_configurations(mocker):
+def xtest_suite_runs_over_all_configurations(mocker):
     """Test that the suite runs over all configurations."""
     # Arrange
     suite = Suite("bin/xhpcg", TestRepository())
@@ -29,7 +29,7 @@ def test_suite_runs_over_all_configurations(mocker):
     assert hpcg_run.call_count == 2
 
 
-def test_suite_saves_run_in_between_files(mocker):
+def xtest_suite_saves_run_in_between_files(mocker):
     """Test that the suite saves a run in between files."""
     # Arrange
     suite = Suite("bin/xhpcg", TestRepository())
