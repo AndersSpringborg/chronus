@@ -14,7 +14,7 @@ from chronus.model.svm import config_model
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.repository import Repository
-from chronus.vis import plot_energy, fake_data
+from chronus.cli import plot_energy, fake_data
 
 name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
 name = "chronus"
