@@ -10,6 +10,7 @@ from rich.logging import RichHandler
 from rich.pretty import pprint
 
 from chronus import version
+from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
 from chronus.model.svm import config_model
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
@@ -138,15 +139,24 @@ def solver():
 
     pprint(best_config)
 
-@app.command(name="slurm-config-json")
-def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
 
+@app.command(name="slurm-config")
+def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
     config = {
         "cores": 2,
         "frequency": 2_200_000,
     }
 
     print(json.dumps(config))
+
+
+@app.command(name="cpu")
+def debug():
+    cpu_service = LsCpuInfoService()
+    pprint(f"CPU:         {cpu_service.get_cpu_info().cpu}")
+    pprint(f"Frequencies: {cpu_service.get_frequencies()}")
+    pprint(f"Cores:       {cpu_service.get_cores()}")
+
 
 if __name__ == "__main__":
     app()
