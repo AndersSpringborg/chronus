@@ -1,6 +1,7 @@
 import pytest
 
 from chronus.SystemIntegration.hpcg import HpcgService
+from tests.test_hpcg_integration.outputs.hpcg_summary import hpcg_summary
 
 
 class TestHPCGRunner:
@@ -49,7 +50,7 @@ def test_parse_gflops(gflops):
 
 
 def test_reads_full_output():
-    test_runner = TestHPCGRunner.from_file("test_hpcg_integration/outputs/hpcg-summary.txt")
+    test_runner = TestHPCGRunner.from_string(hpcg_summary)
     hpcg_service = HpcgService(test_runner)
     hpcg_service.run()
 
@@ -57,7 +58,7 @@ def test_reads_full_output():
 
 
 def test_parse_gflops_from_file():
-    test_runner = TestHPCGRunner.from_file("test_hpcg_integration/outputs/hpcg-summary.txt")
+    test_runner = TestHPCGRunner.from_string(hpcg_summary)
     hpcg_service = HpcgService(test_runner)
     run = hpcg_service.run()
 
