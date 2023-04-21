@@ -3,7 +3,6 @@ import subprocess
 import pytest
 
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
-from chronus.SystemIntegration.system_runner import SystemRunner
 
 
 # pytest fixture to mock the subprocess.run method
