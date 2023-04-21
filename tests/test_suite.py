@@ -1,7 +1,7 @@
 from typing import List
 
 from chronus.__main__ import StandardConfig, Suite
-from chronus.model.Run import Run
+from chronus.domain.Run import Run
 from chronus.SystemIntegration.repository import Repository
 
 

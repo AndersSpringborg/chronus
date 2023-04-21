@@ -1,4 +1,4 @@
-from chronus.model import Run
+from chronus.domain.Run import Run
 
 
 class Repository:

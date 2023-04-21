@@ -3,7 +3,7 @@ import os
 import re
 from pprint import pprint
 
-from chronus.model.Run import Run
+from chronus.domain.Run import Run
 
 
 class HpcgService:

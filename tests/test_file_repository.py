@@ -4,7 +4,7 @@ from os import remove
 
 import pytest
 
-from chronus.model.Run import Run
+from chronus.domain.Run import Run
 from chronus.SystemIntegration.FileRepository import FileRepository
 
 

@@ -8,7 +8,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.svm import SVR
 
-from chronus.model.Run import Run
+from chronus.domain.Run import Run
 
 param_grid = {
     "C": [0.1, 1, 10],
