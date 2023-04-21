@@ -5,12 +5,14 @@ import pytest
 from freezegun import freeze_time
 
 from chronus.domain.benchmark_service import BenchmarkService
-from chronus.domain.interfaces.benchmark_run_repository_interface import BenchmarkRunRepositoryInterface
-from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
-from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface, CpuInfo
-from chronus.domain.system_sample import SystemSample
+from chronus.domain.interfaces.benchmark_run_repository_interface import (
+    BenchmarkRunRepositoryInterface,
+)
+from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo, CpuInfoServiceInterface
+from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
 from chronus.domain.Run import Run
+from chronus.domain.system_sample import SystemSample
 
 
 class FakeCpuInfoService(CpuInfoServiceInterface):
@@ -31,7 +33,6 @@ class FakeCpuInfoService(CpuInfoServiceInterface):
 
 
 class FakeSystemService(SystemServiceInterface):
-
     def __init__(self, power_draw=1.0):
         self.power_draw = power_draw
 
@@ -64,12 +65,15 @@ def sleepless(monkeypatch):
     def sleep(seconds):
         pass
 
-    monkeypatch.setattr(time, 'sleep', sleep)
+    monkeypatch.setattr(time, "sleep", sleep)
 
 
-def benchmark_fixture(cpu_info_service: CpuInfoServiceInterface = None, application: ApplicationRunnerInterface = None,
-                      system_service: SystemServiceInterface = None,
-                      benchmark_repository: BenchmarkRunRepositoryInterface = None):
+def benchmark_fixture(
+    cpu_info_service: CpuInfoServiceInterface = None,
+    application: ApplicationRunnerInterface = None,
+    system_service: SystemServiceInterface = None,
+    benchmark_repository: BenchmarkRunRepositoryInterface = None,
+):
     if cpu_info_service is None:
         cpu_info_service = FakeCpuInfoService(cores=1, frequencies=[1.5])
     if application is None:
@@ -78,9 +82,12 @@ def benchmark_fixture(cpu_info_service: CpuInfoServiceInterface = None, applicat
         system_service = FakeSystemService()
     if benchmark_repository is None:
         benchmark_repository = FakeBencmarkRepository()
-    return BenchmarkService(cpu_info_service=cpu_info_service, application_runner=application,
-                            system_service=system_service,
-                            benchmark_repository=benchmark_repository)
+    return BenchmarkService(
+        cpu_info_service=cpu_info_service,
+        application_runner=application,
+        system_service=system_service,
+        benchmark_repository=benchmark_repository,
+    )
 
 
 def test_initialize_benchmark():
@@ -97,14 +104,17 @@ def test_benchmark_have_speed_after_run():
 
 def test_benchmark_saved_after_each_configuration(mocker):
     # Arrange
-    mock_sleep = mocker.patch('time.sleep')
+    mock_sleep = mocker.patch("time.sleep")
     cores = 2
     frequencies = [1.0]
     application_runner = FakeApplication(4)
     benchmark_run_repository = FakeBencmarkRepository()
     cpu_info_service = FakeCpuInfoService(cores=cores, frequencies=frequencies)
-    benchmark = benchmark_fixture(cpu_info_service=cpu_info_service, benchmark_repository=benchmark_run_repository,
-                                  application=application_runner)
+    benchmark = benchmark_fixture(
+        cpu_info_service=cpu_info_service,
+        benchmark_repository=benchmark_run_repository,
+        application=application_runner,
+    )
 
     # Act
     with freeze_time() as frozen_time:

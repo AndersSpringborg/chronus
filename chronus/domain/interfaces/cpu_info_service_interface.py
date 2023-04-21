@@ -1,5 +1,7 @@
-from dataclasses import dataclass
 from typing import List
+
+from dataclasses import dataclass
+
 
 @dataclass
 class CpuInfo:
@@ -16,5 +18,3 @@ class CpuInfoServiceInterface:
 
     def get_cores(self) -> int:
         pass
-
-

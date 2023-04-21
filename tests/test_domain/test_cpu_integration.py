@@ -8,8 +8,11 @@ from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
 # pytest fixture to mock the subprocess.run method
 @pytest.fixture
 def mock_subprocess_run(mocker):
-    return mocker.patch.object(subprocess, "run", return_value=subprocess.CompletedProcess(args="lscpu", returncode=0,
-                                                                                           stdout=ls_cpu_output))
+    return mocker.patch.object(
+        subprocess,
+        "run",
+        return_value=subprocess.CompletedProcess(args="lscpu", returncode=0, stdout=ls_cpu_output),
+    )
 
 
 def test_parses_model_number_cpu(mock_subprocess_run):
@@ -24,7 +27,9 @@ def test_parses_model_number_cpu(mock_subprocess_run):
 
 def test_no_model_number_cpu(mock_subprocess_run):
     # Arrange
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(args="lscpu", returncode=0, stdout="")
+    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="lscpu", returncode=0, stdout=""
+    )
 
     # Act
     cpu_info = LsCpuInfoService().get_cpu_info()
@@ -34,7 +39,9 @@ def test_no_model_number_cpu(mock_subprocess_run):
 
 
 def test_throws_exception_when_lscpu_fails(mock_subprocess_run):
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(args="lscpu", returncode=1, stdout="")
+    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="lscpu", returncode=1, stdout=""
+    )
 
     try:
         LsCpuInfoService().get_cpu_info()
@@ -44,7 +51,9 @@ def test_throws_exception_when_lscpu_fails(mock_subprocess_run):
 
 def test_get_cores(mock_subprocess_run):
     # Arrange
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(args="lscpu", returncode=0, stdout=ls_cpu_output)
+    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="lscpu", returncode=0, stdout=ls_cpu_output
+    )
     expected_cores = 64
 
     # Act
@@ -55,7 +64,9 @@ def test_get_cores(mock_subprocess_run):
 
 
 def test_get_cores_throws_exception_when_lscpu_fails(mock_subprocess_run):
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(args="lscpu", returncode=1, stdout="")
+    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="lscpu", returncode=1, stdout=""
+    )
 
     try:
         LsCpuInfoService().get_cores()
@@ -64,7 +75,9 @@ def test_get_cores_throws_exception_when_lscpu_fails(mock_subprocess_run):
 
 
 def test_get_cores_return_zero_when_no_cores_found(mock_subprocess_run):
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(args="lscpu", returncode=0, stdout="")
+    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="lscpu", returncode=0, stdout=""
+    )
 
     cores = LsCpuInfoService().get_cores()
 
@@ -74,8 +87,10 @@ def test_get_cores_return_zero_when_no_cores_found(mock_subprocess_run):
 def test_get_frequencies(mock_subprocess_run):
     # Arrange
     mock_subprocess_run.return_value = subprocess.CompletedProcess(
-        args="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies", returncode=0,
-        stdout=cat_sys_devices_system_cpu_cpu_cpufreq_scaling_available_frequencies_output)
+        args="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies",
+        returncode=0,
+        stdout=cat_sys_devices_system_cpu_cpu_cpufreq_scaling_available_frequencies_output,
+    )
     expected_frequencies = [1_500_000, 2_200_000, 2_500_000]
 
     # Act
@@ -87,19 +102,27 @@ def test_get_frequencies(mock_subprocess_run):
 
 def test_get_frequencies_throws_exception_when_cat_fails(mock_subprocess_run):
     mock_subprocess_run.return_value = subprocess.CompletedProcess(
-        args="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies", returncode=1, stdout="")
+        args="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies",
+        returncode=1,
+        stdout="",
+    )
 
     try:
         LsCpuInfoService().get_frequencies()
     except Exception as e:
-        assert e.args[0] == "Failed to read /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies"
+        assert (
+            e.args[0]
+            == "Failed to read /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies"
+        )
 
 
 def test_get_frequency_when_cores_have_different_frequencies(mock_subprocess_run):
     # Arrange
     mock_subprocess_run.return_value = subprocess.CompletedProcess(
-        args="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies", returncode=0,
-        stdout="1500000 2200000 2500000\n1600000 2200000 2500000")
+        args="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies",
+        returncode=0,
+        stdout="1500000 2200000 2500000\n1600000 2200000 2500000",
+    )
     expected_frequencies = [2_200_000, 2_500_000]
 
     # Act

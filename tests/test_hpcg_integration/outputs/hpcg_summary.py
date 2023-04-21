@@ -1,4 +1,4 @@
-hpcg_summary ="""HPCG-Benchmark
+hpcg_summary = """HPCG-Benchmark
 version=3.1
 Release date=March 28, 2019
 Machine Summary=

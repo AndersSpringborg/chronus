@@ -18,7 +18,6 @@ class Run:
     def __post_init__(self):
         self._samples = []
 
-
     @property
     def gflops_per_watt(self) -> float:
         return self.gflops / self.watts
@@ -27,7 +26,9 @@ class Run:
     def energy_used(self) -> float:
         energy = 0.0
         previous_timestamp = self._samples[0].timestamp if len(self._samples) > 0 else None
-        previous_power_draw = self._samples[0].current_power_draw if len(self._samples) > 0 else None
+        previous_power_draw = (
+            self._samples[0].current_power_draw if len(self._samples) > 0 else None
+        )
         for sample in self._samples:
             time_delta = (sample.timestamp - previous_timestamp).total_seconds()
             average_power = (sample.current_power_draw + previous_power_draw) / 2

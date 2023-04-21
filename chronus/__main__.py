@@ -10,12 +10,12 @@ from rich.logging import RichHandler
 from rich.pretty import pprint
 
 from chronus import version
-from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
+from chronus.cli import fake_data, plot_energy
 from chronus.model.svm import config_model
+from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.repository import Repository
-from chronus.cli import plot_energy, fake_data
 
 name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
 name = "chronus"

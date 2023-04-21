@@ -1,12 +1,12 @@
-import re
-import subprocess
 from typing import List
 
-from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface, CpuInfo
+import re
+import subprocess
+
+from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo, CpuInfoServiceInterface
 
 
 class LsCpuInfoService(CpuInfoServiceInterface):
-
     def get_cpu_info(self) -> CpuInfo:
         # Run lscpu and parse the model name
         output = subprocess.run("lscpu", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -23,11 +23,17 @@ class LsCpuInfoService(CpuInfoServiceInterface):
         return CpuInfo(model_name.group(1))
 
     def get_frequencies(self) -> List[float]:
-        output = subprocess.run("cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies",
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        output = subprocess.run(
+            "cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
 
         if output.returncode != 0:
-            raise RuntimeError("Failed to read /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies")
+            raise RuntimeError(
+                "Failed to read /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies"
+            )
 
         rows = output.stdout.split("\n")
         frequencies_str = [row.split(" ") for row in rows]
