@@ -23,25 +23,20 @@ class LsCpuInfoService(CpuInfoServiceInterface):
         return CpuInfo(model_name.group(1))
 
     def get_frequencies(self) -> List[float]:
-        output = subprocess.run(
-            "cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
 
-        if output.returncode != 0:
+        try:
+            file = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies", "r")
+            output = file.read()
+            file.close()
+        except IOError:
             raise RuntimeError(
                 "Failed to read /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies"
             )
 
-        rows = output.stdout.split("\n")
-        frequencies_str = [row.split(" ") for row in rows]
+        # Regex that finds all frequencies
+        frequencies = re.findall(r"(\d+)", output)
 
-        # find the intersection of all the frequencies
-        intersection = set.intersection(*map(set, frequencies_str))
-
-        frequencies = [float(frequency) for frequency in intersection]
+        frequencies = [float(frequency) for frequency in frequencies]
         frequencies.sort()
 
         return frequencies
