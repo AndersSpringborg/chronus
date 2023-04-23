@@ -10,11 +10,12 @@ from rich.logging import RichHandler
 from rich.pretty import pprint
 
 from chronus import version
+from chronus.cli import fake_data, plot_energy
 from chronus.model.svm import config_model
+from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.repository import Repository
-from chronus.vis import plot_energy, fake_data
 
 name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
 name = "chronus"
@@ -138,15 +139,33 @@ def solver():
 
     pprint(best_config)
 
-@app.command(name="slurm-config-json")
-def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
 
+@app.command(name="slurm-config")
+def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
     config = {
         "cores": 2,
         "frequency": 2_200_000,
     }
 
     print(json.dumps(config))
+
+
+@app.command(name="cpu")
+def debug(
+    print_version: bool = typer.Option(
+        None,
+        "-v",
+        "--version",
+        callback=version_callback,
+        is_eager=True,
+        help="Prints the version of the chronus package.",
+    )
+):
+    cpu_service = LsCpuInfoService()
+    pprint(f"CPU:         {cpu_service.get_cpu_info().cpu}")
+    pprint(f"Frequencies: {cpu_service.get_frequencies()}")
+    pprint(f"Cores:       {cpu_service.get_cores()}")
+
 
 if __name__ == "__main__":
     app()

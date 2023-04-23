@@ -3,7 +3,7 @@ from typing import IO, Callable
 import io
 from pprint import pprint
 
-from chronus.model.Run import Run
+from chronus.domain.Run import Run
 from chronus.SystemIntegration.repository import Repository
 
 
