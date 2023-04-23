@@ -151,7 +151,14 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
 
 
 @app.command(name="cpu")
-def debug():
+def debug(print_version: bool = typer.Option(
+        None,
+        "-v",
+        "--version",
+        callback=version_callback,
+        is_eager=True,
+        help="Prints the version of the chronus package.",
+    )):
     cpu_service = LsCpuInfoService()
     pprint(f"CPU:         {cpu_service.get_cpu_info().cpu}")
     pprint(f"Frequencies: {cpu_service.get_frequencies()}")
