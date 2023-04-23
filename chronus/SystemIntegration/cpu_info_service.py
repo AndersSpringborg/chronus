@@ -23,7 +23,6 @@ class LsCpuInfoService(CpuInfoServiceInterface):
         return CpuInfo(model_name.group(1))
 
     def get_frequencies(self) -> List[float]:
-
         try:
             file = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies", "r")
             output = file.read()
