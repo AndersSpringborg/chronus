@@ -45,6 +45,17 @@ class FakeApplication(ApplicationRunnerInterface):
         self.seconds = seconds
         self.__counter = 0
         self.gflops = 10.0
+        self.cleanup_called = 0
+        self.prepare_called = 0
+
+    def run(self, cores: int, frequency: float):
+        pass
+
+    def prepare(self):
+        self.prepare_called += 1
+
+    def cleanup(self):
+        self.cleanup_called += 1
 
     def is_running(self) -> bool:
         is_running = self.__counter < self.seconds
@@ -66,6 +77,16 @@ def sleepless(monkeypatch):
         pass
 
     monkeypatch.setattr(time, "sleep", sleep)
+
+
+@pytest.fixture
+def skip_sleep(mocker):
+    mocked_sleep = mocker.patch("time.sleep")
+
+    def get_mocked_sleep():
+        return mocked_sleep
+
+    return get_mocked_sleep
 
 
 def benchmark_fixture(
@@ -102,9 +123,9 @@ def test_benchmark_have_speed_after_run():
     assert benchmark.gflops is not None
 
 
-def test_benchmark_saved_after_each_configuration(mocker):
+def test_benchmark_saved_after_each_configuration(skip_sleep):
     # Arrange
-    mock_sleep = mocker.patch("time.sleep")
+    mock_sleep = skip_sleep()
     cores = 2
     frequencies = [1.0]
     application_runner = FakeApplication(4)
@@ -182,3 +203,43 @@ def test_run_calculate_energy_one_sample_return_zero():
 
     # Assert
     assert energy_used == 0.0
+
+
+def test_calls_cleanup_after_each_run(skip_sleep):
+    # Arrange
+    application_runner = FakeApplication(4)
+    benchmark_run_repository = FakeBencmarkRepository()
+    cpu_info_service = FakeCpuInfoService(cores=2, frequencies=[1.0])
+    system_service = FakeSystemService()
+    benchmark = benchmark_fixture(
+        cpu_info_service=cpu_info_service,
+        benchmark_repository=benchmark_run_repository,
+        application=application_runner,
+        system_service=system_service,
+    )
+
+    # Act
+    benchmark.run()
+
+    # Assert
+    assert application_runner.cleanup_called == 2
+
+
+def test_calls_prepare_before_each_run(skip_sleep):
+    # Arrange
+    application_runner = FakeApplication(4)
+    benchmark_run_repository = FakeBencmarkRepository()
+    cpu_info_service = FakeCpuInfoService(cores=2, frequencies=[1.0])
+    system_service = FakeSystemService()
+    benchmark = benchmark_fixture(
+        cpu_info_service=cpu_info_service,
+        benchmark_repository=benchmark_run_repository,
+        application=application_runner,
+        system_service=system_service,
+    )
+
+    # Act
+    benchmark.run()
+
+    # Assert
+    assert application_runner.prepare_called == 2
