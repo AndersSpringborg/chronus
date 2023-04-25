@@ -27,7 +27,7 @@ def test_parses_model_number_cpu(mock_subprocess_run):
 
 def test_no_model_number_cpu(mock_subprocess_run):
     # Arrange
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+    mock_subprocess_run().return_value = subprocess.CompletedProcess(
         args="lscpu", returncode=0, stdout=""
     )
 
@@ -39,21 +39,17 @@ def test_no_model_number_cpu(mock_subprocess_run):
 
 
 def test_throws_exception_when_lscpu_fails(mock_subprocess_run):
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+    mock_subprocess_run().return_value = subprocess.CompletedProcess(
         args="lscpu", returncode=1, stdout=""
     )
 
-    try:
+    with pytest.raises(Exception) as exc_info:
         LsCpuInfoService().get_cpu_info()
-    except Exception as e:
-        assert e.args[0] == "Failed to run lscpu"
+    assert exc_info.value.args[0] == "Failed to run lscpu"
 
 
 def test_get_cores(mock_subprocess_run):
     # Arrange
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(
-        args="lscpu", returncode=0, stdout=ls_cpu_output
-    )
     expected_cores = 64
 
     # Act
@@ -64,18 +60,17 @@ def test_get_cores(mock_subprocess_run):
 
 
 def test_get_cores_throws_exception_when_lscpu_fails(mock_subprocess_run):
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+    mock_subprocess_run().return_value = subprocess.CompletedProcess(
         args="lscpu", returncode=1, stdout=""
     )
 
-    try:
+    with pytest.raises(Exception) as exc_info:
         LsCpuInfoService().get_cores()
-    except Exception as e:
-        assert e.args[0] == "Failed to run lscpu"
+    assert exc_info.value.args[0] == "Failed to run lscpu"
 
 
 def test_get_cores_return_zero_when_no_cores_found(mock_subprocess_run):
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(
+    mock_subprocess_run().return_value = subprocess.CompletedProcess(
         args="lscpu", returncode=0, stdout=""
     )
 
