@@ -73,7 +73,7 @@ class HpcgService(ApplicationRunnerInterface):
 #SBATCH --job-name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
 #SBATCH --error=HPCG_BENCHMARK.err
-#SBATCH --n={cores}
+#SBATCH --ntasks={cores}
 #SBATCH --cpu-freq={frequency}
 
 srun --mpi=pmix_v4 {self._hpcg_path}"""
