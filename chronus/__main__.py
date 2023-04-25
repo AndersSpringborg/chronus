@@ -152,6 +152,7 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
 
     print(json.dumps(config))
 
+# add partician compute
 
 @app.command(name="cpu")
 def debug(
@@ -165,10 +166,14 @@ def debug(
         help="Prints the version of the chronus package.",
     )
 ):
+    import os
+    full_path = os.path.abspath(hpcg_path)
+    print(full_path)
+
     benchmark = BenchmarkService(
         cpu_info_service=LsCpuInfoService(),
-        application_runner=HpcgService(hpcg_path),
-        benchmark_repository=CsvRunRepository("./chronus_run_save.csv"),
+        application_runner=HpcgService(full_path),
+        benchmark_repository=CsvRunRepository(full_path),
         system_service=IpmiSystemService(),
     )
 

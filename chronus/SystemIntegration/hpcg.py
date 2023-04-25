@@ -9,7 +9,7 @@ from chronus.domain.Run import Run
 hpcg_dat_file_content = """HPCG benchmark input file
 Benchmarked on 2020-11-24 14:00:00
 104 104 104
-900"""
+10"""
 
 
 class HpcgService(ApplicationRunnerInterface):
@@ -40,17 +40,20 @@ class HpcgService(ApplicationRunnerInterface):
             slurm_file.write(slurm_file_content)
 
         job: subprocess.CompletedProcess = subprocess.run(
-            ["sbatch", "HPCG_BENCHMARK.slurm"], cwd=self._output_dir + "hpcg_benchmark_output"
+            ["sbatch", "HPCG_BENCHMARK.slurm"], cwd=self._output_dir + "hpcg_benchmark_output", stdout=subprocess.PIPE
         )
+
+        stdout = str(job.stdout)
+        print(stdout)
         # Regex for getting job id in: Submitted batch job 449
-        job_id_str = re.search(r"Submitted batch job (\d+)", job.stdout).group(1)
+        job_id_str = re.search(r"Submitted batch job (\d+)", stdout).group(1)
 
         self._job_id = int(job_id_str)
 
     def is_running(self) -> bool:
-        cmd = subprocess.run(["scontrol", "show", "job", self._job_id], stdout=subprocess.PIPE)
+        cmd = subprocess.run(["scontrol", "show", "job", str(self._job_id)], stdout=subprocess.PIPE)
 
-        is_running = re.search(r"JobState=COMPLETED", cmd.stdout) is None
+        is_running = re.search(r"JobState=COMPLETED", str(cmd.stdout)) is None
 
         return is_running
 
