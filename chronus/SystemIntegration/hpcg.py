@@ -16,13 +16,6 @@ class HpcgService(ApplicationRunnerInterface):
     _output: str
     _job_id: int
 
-    def is_running(self) -> bool:
-        cmd = subprocess.run(["scontrol", "show", "job", self._job_id], stdout=subprocess.PIPE)
-
-        is_running = re.search(r"JobState=COMPLETED", cmd.stdout) is None
-
-        return is_running
-
     def __init__(self, hpcg_path, output_dir: str = ""):
         self._hpcg_path = hpcg_path
         if output_dir == "":
@@ -54,6 +47,27 @@ class HpcgService(ApplicationRunnerInterface):
 
         self._job_id = int(job_id_str)
 
+    def is_running(self) -> bool:
+        cmd = subprocess.run(["scontrol", "show", "job", self._job_id], stdout=subprocess.PIPE)
+
+        is_running = re.search(r"JobState=COMPLETED", cmd.stdout) is None
+
+        return is_running
+
+    @property
+    def gflops(self) -> float:
+        files = os.listdir(self._output_dir + "hpcg_benchmark_output")
+        output_file = [f for f in files if re.match(r"HPCG-Benchmark_", f)][0]
+        output_file_content = open(
+            self._output_dir + "hpcg_benchmark_output/" + output_file, "r"
+        ).read()
+        gflops = self._parse_output(output_file_content)
+        return gflops
+
+    def cleanup(self):
+        # Delte all files in outpur dir, and then delete the dir
+        os.system(f"rm -rf {self._output_dir}hpcg_benchmark_output")
+
     def _generate_slurm_file_content(self, cores, frequency) -> str:
         return f"""#!/bin/bash
 #SBATCH --job-name=HPCG_BENCHMARK
@@ -73,16 +87,6 @@ srun --mpi=pmix_v4 {self._hpcg_path}"""
 
         return 0.0
 
-    @property
-    def gflops(self) -> float:
-        files = os.listdir(self._output_dir + "hpcg_benchmark_output")
-        output_file = [f for f in files if re.match(r"HPCG-Benchmark_", f)][0]
-        output_file_content = open(
-            self._output_dir + "hpcg_benchmark_output/" + output_file, "r"
-        ).read()
-        gflops = self._parse_output(output_file_content)
-        return gflops
-
     def _prepare_output_dir(self):
         os.mkdir(self._output_dir + "hpcg_benchmark_output")
 
@@ -90,7 +94,3 @@ srun --mpi=pmix_v4 {self._hpcg_path}"""
         dat_file = open(self._output_dir + "hpcg_benchmark_output/hpcg.dat", "w")
         dat_file.write(hpcg_dat_file_content)
         dat_file.close()
-
-    def cleanup(self):
-        # Delte all files in outpur dir, and then delete the dir
-        os.system(f"rm -rf {self._output_dir}hpcg_benchmark_output")
