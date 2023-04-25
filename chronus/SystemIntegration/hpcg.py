@@ -17,7 +17,7 @@ class HpcgService(ApplicationRunnerInterface):
     _job_id: int
 
     def is_running(self) -> bool:
-        cmd = subprocess.run(["scontrol", "show", "job", "449"], stdout=subprocess.PIPE)
+        cmd = subprocess.run(["scontrol", "show", "job", self._job_id], stdout=subprocess.PIPE)
 
         is_running = re.search(r"JobState=COMPLETED", cmd.stdout) is None
 
@@ -49,7 +49,6 @@ class HpcgService(ApplicationRunnerInterface):
         job: subprocess.CompletedProcess = subprocess.run(
             ["sbatch", "HPCG_BENCHMARK.slurm"], cwd=self._output_dir + "hpcg_benchmark_output"
         )
-
         # Regex for getting job id in: Submitted batch job 449
         job_id_str = re.search(r"Submitted batch job (\d+)", job.stdout).group(1)
 
@@ -76,12 +75,13 @@ srun --mpi=pmix_v4 {self._hpcg_path}"""
 
     @property
     def gflops(self) -> float:
-        return 1.51085
-
-    @classmethod
-    def with_path(cls, path: str) -> "HpcgService":
-        runner = HpcgRunner(path)
-        return cls(runner)
+        files = os.listdir(self._output_dir + "hpcg_benchmark_output")
+        output_file = [f for f in files if re.match(r"HPCG-Benchmark_", f)][0]
+        output_file_content = open(
+            self._output_dir + "hpcg_benchmark_output/" + output_file, "r"
+        ).read()
+        gflops = self._parse_output(output_file_content)
+        return gflops
 
     def _prepare_output_dir(self):
         os.mkdir(self._output_dir + "hpcg_benchmark_output")
@@ -91,18 +91,6 @@ srun --mpi=pmix_v4 {self._hpcg_path}"""
         dat_file.write(hpcg_dat_file_content)
         dat_file.close()
 
-
-class HpcgRunner:
-    _run_id: int
-
-    def __init__(self, path: str = None):
-        self._path = path
-
-    def run(self) -> str:
-        # run system command
-        import subprocess
-
-        output_path = "./../out/run_output" + str(self._run_id) + ".txt"
-        output = subprocess.call(["sh", "./../hpcg_debug.sh", output_path])
-        # print current working directory
-        print(output)
+    def cleanup(self):
+        # Delte all files in outpur dir, and then delete the dir
+        os.system(f"rm -rf {self._output_dir}hpcg_benchmark_output")

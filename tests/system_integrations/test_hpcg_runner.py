@@ -26,9 +26,9 @@ from tests.test_domain.fixtures import mock_subprocess_run
 @pytest.fixture
 def make_file(tmpdir):
     def factory(file_name: str, content: str):
-        file = tmpdir.join(file_name)
-        file.write(content)
-        return file
+        file_name = tmpdir.join("hpcg_benchmark_output/" + file_name)
+        with open(file_name, "w") as file:
+            file.write(content)
 
     return factory
 
@@ -157,7 +157,9 @@ def test_hpcg_is_running_is_when_scontrol_running(hpcg_service_temp_factory, moc
 
     # Assert
     assert is_running is True
-    assert mocked_subprocess_run.called_with(["scontrol", "show", "job", job_id])
+    mocked_subprocess_run.assert_called_with(
+        ["scontrol", "show", "job", job_id], stdout=subprocess.PIPE
+    )
 
 
 def test_hpcg_is_not_running_when_scontrol_completed(
@@ -182,7 +184,32 @@ def test_hpcg_is_not_running_when_scontrol_completed(
 
     # Assert
     assert is_running is False
-    assert mocked_subprocess_run.called_with(["scontrol", "show", "job", job_id])
+    mocked_subprocess_run.assert_called_with(
+        ["scontrol", "show", "job", job_id], stdout=subprocess.PIPE
+    )
+
+
+def test_hpcg_is_getting_the_job_id_from_scontrol(hpcg_service_temp_factory, mock_subprocess_run):
+    # Arrange
+    app_runner = hpcg_service_temp_factory()
+    app_runner.prepare()
+    job_id = 300
+    mocked_subprocess_run = mock_subprocess_run()
+    mocked_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="", returncode=0, stdout=f"Submitted batch job {job_id}"
+    )
+
+    # Act
+    app_runner.run(cores=10, frequency=1_500_000)
+    mocked_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="", returncode=0, stdout=SCONTROL_IS_COMPLETED_OUTPUT
+    )
+    app_runner.is_running()
+
+    # Assert
+    mocked_subprocess_run.assert_called_with(
+        ["scontrol", "show", "job", job_id], stdout=subprocess.PIPE
+    )
 
 
 def test_hpcg_gives_correct_result_when_scontrol_completed(
@@ -208,6 +235,20 @@ def test_hpcg_gives_correct_result_when_scontrol_completed(
 
     # Assert
     assert app_runner.gflops == 1.51085
+
+
+def test_files_are_deleted_after_is_running_is_returning_false(
+    hpcg_service_temp_factory, tmpdir, mock_subprocess_run, make_file
+):
+    # Arrange
+    app_runner = hpcg_service_temp_factory()
+    app_runner.prepare()
+
+    # Act
+    app_runner.cleanup()
+
+    # Assert
+    assert not tmpdir.join("hpcg_benchmark_output").isdir()
 
 
 HPCG_DAT_FILE_CONTENT = """HPCG benchmark input file
