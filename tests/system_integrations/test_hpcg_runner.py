@@ -237,6 +237,32 @@ def test_hpcg_gives_correct_result_when_scontrol_completed(
     assert app_runner.gflops == 1.51085
 
 
+@pytest.mark.parametrize(
+    ("gflops"),
+    [
+        0.0,
+        15.3024,
+        123456.123456,
+    ],
+)
+def test_parse_gflops(gflops, hpcg_service_temp_factory, mock_subprocess_run, make_file):
+    # Arrange
+    app_runner = hpcg_service_temp_factory()
+    app_runner.prepare()
+
+    make_file("hpcg20230424T041652.txt", HPCG_LOG)
+    make_file(
+        "HPCG-Benchmark_3.1_2023-04-24_04-16-52.txt",
+        f"Final Summary::HPCG result is VALID with a GFLOP/s rating of={gflops}",
+    )
+
+    # Act
+    gflops_from_app_runner = app_runner.gflops
+
+    # Assert
+    assert gflops_from_app_runner == gflops
+
+
 def test_files_are_deleted_after_is_running_is_returning_false(
     hpcg_service_temp_factory, tmpdir, mock_subprocess_run, make_file
 ):
