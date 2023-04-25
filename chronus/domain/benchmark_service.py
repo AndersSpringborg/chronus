@@ -41,6 +41,7 @@ class BenchmarkService:
         configurations = Configurations(cores, frequencies)
         for configuration in configurations:
             run = Run(cpu=cpu, cores=configuration.cores, frequency=configuration.frequency)
+            self.application_runner.prepare()
             self.application_runner.run(configuration.cores, configuration.frequency)
             while self.application_runner.is_running():
                 sample = self.system_service.sample()
@@ -49,4 +50,5 @@ class BenchmarkService:
 
             run.add_sample(self.system_service.sample())
             run.gflops = self.application_runner.gflops
+            self.application_runner.cleanup()
             self.run_repository.save(run)
