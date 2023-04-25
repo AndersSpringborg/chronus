@@ -10,7 +10,10 @@ from rich.logging import RichHandler
 from rich.pretty import pprint
 
 from chronus import version
+from chronus.SystemIntegration.csv_repository import CsvRunRepository
+from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
 from chronus.cli import fake_data, plot_energy
+from chronus.domain.benchmark_service import BenchmarkService
 from chronus.model.svm import config_model
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.FileRepository import FileRepository
@@ -152,6 +155,7 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
 
 @app.command(name="cpu")
 def debug(
+    hpcg_path: str,
     print_version: bool = typer.Option(
         None,
         "-v",
@@ -161,10 +165,12 @@ def debug(
         help="Prints the version of the chronus package.",
     )
 ):
-    cpu_service = LsCpuInfoService()
-    pprint(f"CPU:         {cpu_service.get_cpu_info().cpu}")
-    pprint(f"Frequencies: {cpu_service.get_frequencies()}")
-    pprint(f"Cores:       {cpu_service.get_cores()}")
+    benchmark = BenchmarkService(
+        cpu_info_service=LsCpuInfoService(),
+        application_runner=HpcgService(hpcg_path),
+        benchmark_repository=CsvRunRepository("./chronus_run_save.csv"),
+        system_service=IpmiSystemService(),
+    )
 
 
 if __name__ == "__main__":
