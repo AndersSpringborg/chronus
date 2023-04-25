@@ -172,6 +172,10 @@ def debug(
         system_service=IpmiSystemService(),
     )
 
+    benchmark.run()
+
+
+
 
 if __name__ == "__main__":
     app()
