@@ -169,10 +169,16 @@ def debug(
         callback=version_callback,
         is_eager=True,
         help="Prints the version of the chronus package.",
-    )
+    ),
+    debug: bool = typer.Option(
+        False,
+        "-d",
+        "--debug",
+        help="Print debug information.",
+    ),
 ):
-    #if debug:
-    #    logging.getLogger().setLevel(logging.DEBUG)
+    if debug:
+        logging.getLogger().setLevel(logging.DEBUG)
     import os
     full_path = os.path.abspath(hpcg_path)
     print(full_path)
