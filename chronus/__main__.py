@@ -186,7 +186,7 @@ def debug(
     benchmark = BenchmarkService(
         cpu_info_service=LsCpuInfoService(),
         application_runner=HpcgService(full_path),
-        benchmark_repository=CsvRunRepository(called_from_dir + csv_path),
+        benchmark_repository=CsvRunRepository(called_from_dir + "/" + csv_path),
         system_service=IpmiSystemService(),
     )
 
