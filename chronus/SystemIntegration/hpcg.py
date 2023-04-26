@@ -9,7 +9,7 @@ from chronus.domain.Run import Run
 hpcg_dat_file_content = """HPCG benchmark input file
 Benchmarked on 2020-11-24 14:00:00
 104 104 104
-10"""
+900"""
 
 
 class HpcgService(ApplicationRunnerInterface):
@@ -44,7 +44,6 @@ class HpcgService(ApplicationRunnerInterface):
         )
 
         stdout = str(job.stdout)
-        print(stdout)
         # Regex for getting job id in: Submitted batch job 449
         job_id_str = re.search(r"Submitted batch job (\d+)", stdout).group(1)
 
