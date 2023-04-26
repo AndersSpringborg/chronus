@@ -1,3 +1,4 @@
+import logging
 import time
 
 from chronus.domain.configuration import Configurations
@@ -32,6 +33,7 @@ class BenchmarkService:
         self.system_service = system_service
         self.run_repository = benchmark_repository
         self.gflops = 0.0
+        self.logger = logging.getLogger(__name__)
 
     def run(self):
         cpu = self.cpu_info_service.get_cpu_info().cpu
@@ -40,6 +42,7 @@ class BenchmarkService:
 
         configurations = Configurations(cores, frequencies)
         for configuration in configurations:
+            self.logger.info(f"Starting benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz")
             run = Run(cpu=cpu, cores=configuration.cores, frequency=configuration.frequency)
             self.application_runner.prepare()
             self.application_runner.run(configuration.cores, configuration.frequency)
@@ -52,3 +55,5 @@ class BenchmarkService:
             run.gflops = self.application_runner.gflops
             self.application_runner.cleanup()
             self.run_repository.save(run)
+
+            self.logger.info(f"Benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz complete, GFLOPS: {run.gflops}")
