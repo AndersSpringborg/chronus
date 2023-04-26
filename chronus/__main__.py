@@ -176,17 +176,17 @@ def debug(
         "--debug",
         help="Print debug information.",
     ),
+    csv_path: str = 'runs.csv'
 ):
     if debug:
         logging.getLogger().setLevel(logging.DEBUG)
     import os
     full_path = os.path.abspath(hpcg_path)
-    print(full_path)
-
+    called_from_dir = os.getcwd()
     benchmark = BenchmarkService(
         cpu_info_service=LsCpuInfoService(),
         application_runner=HpcgService(full_path),
-        benchmark_repository=CsvRunRepository(full_path),
+        benchmark_repository=CsvRunRepository(called_from_dir + csv_path),
         system_service=IpmiSystemService(),
     )
 
