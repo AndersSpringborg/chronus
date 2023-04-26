@@ -13,7 +13,6 @@ class Run:
     cores: int = 0
     frequency: float = 0.0
     gflops: float = 0.0
-    _joules_used: float = 0.0
 
     def __post_init__(self):
         self._samples = []
