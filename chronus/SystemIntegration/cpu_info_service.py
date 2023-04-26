@@ -12,7 +12,7 @@ class LsCpuInfoService(CpuInfoServiceInterface):
         output = subprocess.run("lscpu", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         if output.returncode != 0:
-            raise RuntimeError(f"Failed to run lscpu {str(output.stderr)}")
+            raise RuntimeError(f"Failed to run lscpu")
         # Regex that finds Model Name: <model name>
         model_name = re.search(r"Model name:\s+(.*)", output.stdout)
 
