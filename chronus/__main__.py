@@ -32,6 +32,11 @@ class Color(str, Enum):
     yellow = "yellow"
     green = "green"
 
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+)
+
 
 app = typer.Typer(
     name="chronus",
@@ -166,6 +171,8 @@ def debug(
         help="Prints the version of the chronus package.",
     )
 ):
+    #if debug:
+    #    logging.getLogger().setLevel(logging.DEBUG)
     import os
     full_path = os.path.abspath(hpcg_path)
     print(full_path)
@@ -181,6 +188,9 @@ def debug(
 
 
 
+# delete output dir if exception
+# error if exists
+# if job failed, continue
 
 if __name__ == "__main__":
     app()
