@@ -28,6 +28,8 @@ class HpcgService(ApplicationRunnerInterface):
         self._output = ""
 
     def prepare(self):
+        if self._output_dir_exists():
+            raise FileExistsError("Output dir already exists")
         self._prepare_output_dir()
         self._prepare_hpcg_dat_file()
 
@@ -96,3 +98,6 @@ srun --mpi=pmix_v4 {self._hpcg_path}"""
         dat_file = open(self._output_dir + "hpcg_benchmark_output/hpcg.dat", "w")
         dat_file.write(hpcg_dat_file_content)
         dat_file.close()
+
+    def _output_dir_exists(self):
+        return os.path.exists(self._output_dir + "hpcg_benchmark_output")
