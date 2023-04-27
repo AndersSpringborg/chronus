@@ -24,14 +24,8 @@ class FakeCpuInfoService(CpuInfoServiceInterface):
         self.cores = cores
         self.frequencies = frequencies
 
-    def get_cores(self):
-        return self.cores
-
-    def get_frequencies(self):
-        return self.frequencies
-
     def get_cpu_info(self) -> CpuInfo:
-        return CpuInfo(cpu="Fake CPU")
+        return CpuInfo(name="Fake CPU", cores=self.cores, frequencies=self.frequencies, threads_per_core=1)
 
 
 class FakeSystemService(SystemServiceInterface):

@@ -12,6 +12,7 @@ class Run:
     _samples: list[SystemSample] = None
     cpu: str = ""
     cores: int = 0
+    threads_per_core: int = 1
     frequency: float = 0.0
     gflops: float = 0.0
     flop: float = 0.0

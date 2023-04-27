@@ -36,16 +36,14 @@ class BenchmarkService:
         self.logger = logging.getLogger(__name__)
 
     def run(self):
-        cpu = self.cpu_info_service.get_cpu_info().cpu
-        cores = self.cpu_info_service.get_cores()
-        frequencies = self.cpu_info_service.get_frequencies()
+        cpu = self.cpu_info_service.get_cpu_info()
 
-        configurations = Configurations(cores, frequencies)
+        configurations = Configurations(cpu)
         for configuration in configurations:
             self.logger.info(
-                f"Starting benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz"
+                f"Starting benchmark for {cpu.name} with {configuration.cores} cores and {configuration.frequency / 1.0e8} GHz"
             )
-            run = Run(cpu=cpu, cores=configuration.cores, frequency=configuration.frequency)
+            run = Run(cpu=cpu.name, cores=configuration.cores, frequency=configuration.frequency, threads_per_core=configuration.threads_per_core)
             self.application_runner.prepare()
             self.application_runner.run(configuration.cores, configuration.frequency)
             while self.application_runner.is_running():

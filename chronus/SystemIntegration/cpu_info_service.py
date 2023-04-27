@@ -19,7 +19,7 @@ class LsCpuInfoService(CpuInfoServiceInterface):
             raise RuntimeError(f"Failed to run lscpu: {output.stderr}")
         info = CpuInfo()
 
-        info.cpu = self._get_cpu_model_name(output.stdout)
+        info.name = self._get_cpu_model_name(output.stdout)
         info.cores = self._get_cores(output.stdout)
         info.frequencies = self._get_frequencies()
         info.threads_per_core = self._get_threads_per_core(output.stdout)
