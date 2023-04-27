@@ -22,7 +22,7 @@ class Run:
         return self.gflops / self.watts
 
     @property
-    def energy_used(self) -> float:
+    def energy_used_joules(self) -> float:
         energy = 0.0
         previous_timestamp = self._samples[0].timestamp if len(self._samples) > 0 else None
         previous_power_draw = (
