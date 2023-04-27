@@ -31,7 +31,9 @@ class CsvRunRepository(BenchmarkRunRepositoryInterface):
 
     def save(self, run: Run) -> None:
         with open(self.path, "a") as f:
-            f.write(f"{run.cpu},{run.cores},{run.frequency},{run.gflops},{run.energy_used_joules},{run.gflops_per_watt},{run.start_time},{run.end_time}\n")
+            f.write(
+                f"{run.cpu},{run.cores},{run.frequency},{run.gflops},{run.energy_used_joules},{run.gflops_per_watt},{run.start_time},{run.end_time}\n"
+            )
         self.logger.info(f"Run data has been saved to {self.path}.")
 
     def _backup_file(self):

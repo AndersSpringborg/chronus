@@ -5,7 +5,6 @@ import freezegun
 import pytest
 from freezegun import freeze_time
 
-from chronus.domain.Run import Run
 from chronus.domain.benchmark_service import BenchmarkService
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
 from chronus.domain.interfaces.benchmark_run_repository_interface import (
@@ -13,6 +12,7 @@ from chronus.domain.interfaces.benchmark_run_repository_interface import (
 )
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo, CpuInfoServiceInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
+from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 from tests.fixtures import datetime_from_string
 
@@ -188,8 +188,8 @@ def test_calls_prepare_before_each_run(skip_sleep):
     # Assert
     assert application_runner.prepare_called == 2
 
-@freezegun.freeze_time("2021-01-01 00:00:00")
 
+@freezegun.freeze_time("2021-01-01 00:00:00")
 def test_benchmark_set_end_time_after_run_is_completed(skip_sleep):
     # Arrange
     repository = FakeBencmarkRepository()

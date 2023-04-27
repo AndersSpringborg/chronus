@@ -72,6 +72,7 @@ def test_run_calculates_gflops_per_watt():
     # Assert
     assert gflops_per_watt == 10.0
 
+
 def test_run_calculates_gflops_per_watt_with_fluctuated_power_draw():
     # Arrange
     run = Run()
@@ -85,4 +86,3 @@ def test_run_calculates_gflops_per_watt_with_fluctuated_power_draw():
 
     # Assert
     assert gflops_per_watt == 1.0
-

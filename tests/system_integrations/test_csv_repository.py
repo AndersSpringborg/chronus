@@ -55,4 +55,7 @@ def test_save_run(csv_file):
 
     # Assert
     # cpu=test, cores=2, frequency=1.5, gflops=30.0, energy_used=10.0, gflops_per_watt=3.0
-    assert csv_file.read_text() == HEADERS + "test,2,1.5,30.0,10.0,3.0,2020-01-01 00:00:01,2020-01-01 00:00:02\n"
+    assert (
+        csv_file.read_text()
+        == HEADERS + "test,2,1.5,30.0,10.0,3.0,2020-01-01 00:00:01,2020-01-01 00:00:02\n"
+    )

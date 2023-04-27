@@ -28,7 +28,7 @@ class Run:
     def _average_power_draw(self) -> float:
         return sum([sample.current_power_draw for sample in self._samples]) / len(self._samples)
 
-    def finish(self, end_time: datetime.datetime =None):
+    def finish(self, end_time: datetime.datetime = None):
         self.end_time = end_time or datetime.datetime.now()
 
     @property
