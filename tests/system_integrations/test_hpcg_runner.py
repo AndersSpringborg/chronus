@@ -5,22 +5,6 @@ import pytest
 from chronus.SystemIntegration.hpcg import HpcgService
 from tests.test_domain.fixtures import mock_subprocess_run
 
-# 1. Find ud af hvordan jeg gerne vil kører hpcg -> hvordan skal hpcg.dat se ud
-# 2. Hvordan får jeg hpcg til at kører det i en besstemt path
-# ---- jeg vil gerne outputte i en makke 'hpcg_benchmark_output' i den mappe jeg er I, i mens jeg køer
-# ---- Derefter slette mappen igen
-# 3. Generere HPCG.DAT
-# 4. Generer HPCG_BENCHMARK.SLURM
-# Gem filerne i 'hpcg_benchmark_output'
-# 5. Kør 'sbatch HPCG_BENCHMARK.SLURM' inde fra 'hpcg_benchmark_output'
-# ---- returnere job id 'Submitted batch job 447'
-# 6. Kør 'squeue -u <username>' og find ud af om der er en job der hedder 'hpcg_benchmark'
-# 7. Find ud af om jobbet stadig kører med 'squeue -u <username>' og 'sacct -u <username>'
-# 8. Hent output fra 'hpcg_benchmark_output' og gem det i 'hpcg_benchmark_output'
-# 9. Parse outputtet og gem det i en database
-# 10. Slet 'hpcg_benchmark_output' igen
-# ---- Jeg ved at der kun er de filer, så jeg kan bare slette alt med HPCG i navnet
-# 11. Gå til 1
 
 
 @pytest.fixture
@@ -263,6 +247,31 @@ def test_parse_gflops(gflops, hpcg_service_factory, mock_subprocess_run, make_fi
 
     # Assert
     assert gflops_from_app_runner == gflops
+
+@pytest.mark.parametrize(
+    ("results,in_floats"),
+    [
+        ("1.36952e+08", 136952000.0),
+        ("1.0e+08", 100000000.0),
+        ("2.0e+02", 200.0),
+    ]
+)
+def test_parse_results(results, in_floats, hpcg_service_factory, mock_subprocess_run, make_file):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+
+    make_file("hpcg20230424T041652.txt", HPCG_LOG)
+    make_file(
+        "HPCG-Benchmark_3.1_2023-04-24_04-16-52.txt",
+        f"Floating Point Operations Summary::Total={results}",
+    )
+
+    # Act
+    results_from_app_runner = app_runner.result
+
+    # Assert
+    assert results_from_app_runner == in_floats
 
 
 def test_files_are_deleted_after_is_running_is_returning_false(

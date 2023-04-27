@@ -1,5 +1,6 @@
 class ApplicationRunnerInterface:
     gflops: float
+    result: float
 
     def run(self, cores: int, frequency: float):
         pass

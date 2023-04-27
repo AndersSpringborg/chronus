@@ -43,10 +43,11 @@ class FakeSystemService(SystemServiceInterface):
 
 
 class FakeApplication(ApplicationRunnerInterface):
-    def __init__(self, seconds: int = None):
+    def __init__(self, seconds: int = None, result: float = None, gflops: float = None):
         self.seconds = seconds or 0
         self.__counter = 0
-        self.gflops = 10.0
+        self.gflops = gflops or 10.0
+        self.result = result or 100.0
         self.cleanup_called = 0
         self.prepare_called = 0
 
@@ -124,10 +125,31 @@ def test_initialize_benchmark():
 
 
 def test_benchmark_have_speed_after_run():
-    benchmark = benchmark_fixture()
+    gflops = 100.0
+    repository = FakeBencmarkRepository()
+    runner = FakeApplication(gflops=gflops)
+    benchmark = benchmark_fixture(
+        benchmark_repository=repository,
+        application=runner,
+    )
     benchmark.run()
 
-    assert benchmark.gflops is not None
+    run = repository.runs[0]
+    assert run.result == gflops
+
+
+def test_benchmark_have_result_after_run():
+    operations_done = 100.0
+    repository = FakeBencmarkRepository()
+    runner = FakeApplication(result=operations_done)
+    benchmark = benchmark_fixture(
+        benchmark_repository=repository,
+        application=runner,
+    )
+    benchmark.run()
+
+    run = repository.runs[0]
+    assert run.result == operations_done
 
 
 def test_benchmark_saved_after_each_configuration(skip_sleep):

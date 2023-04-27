@@ -14,6 +14,7 @@ class Run:
     cores: int = 0
     frequency: float = 0.0
     gflops: float = 0.0
+    result: float = 0.0
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
 
