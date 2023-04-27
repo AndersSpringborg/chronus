@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import subprocess
@@ -26,10 +27,14 @@ class HpcgService(ApplicationRunnerInterface):
 
         self._output_dir = output_dir
         self._output = ""
+        self.logger = logging.getLogger(__name__)
 
     def prepare(self):
+        if self._output_dir_exists():
+            raise FileExistsError("Output dir already exists")
         self._prepare_output_dir()
         self._prepare_hpcg_dat_file()
+        self.logger.info("Prepared HPCG Service")
 
     def run(self, cores: int = 1, frequency: int = 1_500_000):
         slurm_file_content = self._generate_slurm_file_content(cores, frequency)
@@ -40,17 +45,22 @@ class HpcgService(ApplicationRunnerInterface):
             slurm_file.write(slurm_file_content)
 
         job: subprocess.CompletedProcess = subprocess.run(
-            ["sbatch", "HPCG_BENCHMARK.slurm"], cwd=self._output_dir + "hpcg_benchmark_output"
+            ["sbatch", "HPCG_BENCHMARK.slurm"],
+            cwd=self._output_dir + "hpcg_benchmark_output",
+            stdout=subprocess.PIPE,
         )
+
+        stdout = str(job.stdout)
         # Regex for getting job id in: Submitted batch job 449
-        job_id_str = re.search(r"Submitted batch job (\d+)", job.stdout).group(1)
+        job_id_str = re.search(r"Submitted batch job (\d+)", stdout).group(1)
 
         self._job_id = int(job_id_str)
+        self.logger.info(f"Job started with id: {self._job_id}")
 
     def is_running(self) -> bool:
-        cmd = subprocess.run(["scontrol", "show", "job", self._job_id], stdout=subprocess.PIPE)
+        cmd = subprocess.run(["scontrol", "show", "job", str(self._job_id)], stdout=subprocess.PIPE)
 
-        is_running = re.search(r"JobState=COMPLETED", cmd.stdout) is None
+        is_running = re.search(r"JobState=COMPLETED", str(cmd.stdout)) is None
 
         return is_running
 
@@ -62,18 +72,20 @@ class HpcgService(ApplicationRunnerInterface):
             self._output_dir + "hpcg_benchmark_output/" + output_file, "r"
         ).read()
         gflops = self._parse_output(output_file_content)
+        self.logger.debug(f"GFlops calculated: {gflops}")
         return gflops
 
     def cleanup(self):
         # Delte all files in outpur dir, and then delete the dir
         os.system(f"rm -rf {self._output_dir}hpcg_benchmark_output")
+        self.logger.info("HPCG Service cleaned up")
 
     def _generate_slurm_file_content(self, cores, frequency) -> str:
         return f"""#!/bin/bash
 #SBATCH --job-name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
 #SBATCH --error=HPCG_BENCHMARK.err
-#SBATCH --n={cores}
+#SBATCH --ntasks={cores}
 #SBATCH --cpu-freq={frequency}
 
 srun --mpi=pmix_v4 {self._hpcg_path}"""
@@ -83,14 +95,29 @@ srun --mpi=pmix_v4 {self._hpcg_path}"""
         match = gflops_parser.search(output)
 
         if match:
-            return float(match.group("gflops"))
+            gflops = float(match.group("gflops"))
+            self.logger.info(f"GFLOP/s rating found: {gflops}")
+            return gflops
 
+        self.logger.warning("GFLOP/s rating not found in output")
         return 0.0
 
     def _prepare_output_dir(self):
-        os.mkdir(self._output_dir + "hpcg_benchmark_output")
+        output_dir = self._output_dir + "hpcg_benchmark_output"
+        os.mkdir(output_dir)
+        self.logger.info(f"Created directory: {output_dir}")
 
     def _prepare_hpcg_dat_file(self):
-        dat_file = open(self._output_dir + "hpcg_benchmark_output/hpcg.dat", "w")
-        dat_file.write(hpcg_dat_file_content)
-        dat_file.close()
+        output_dir = self._output_dir + "hpcg_benchmark_output"
+        dat_file_path = output_dir + "/hpcg.dat"
+        with open(dat_file_path, "w") as dat_file:
+            dat_file.write(hpcg_dat_file_content)
+        self.logger.info(f"Created file: {dat_file_path}")
+
+    def _output_dir_exists(self):
+        output_dir = self._output_dir + "hpcg_benchmark_output"
+        if os.path.exists(output_dir):
+            self.logger.info(f"Directory exists: {output_dir}")
+            return True
+        self.logger.warning(f"Directory does not exist: {output_dir}")
+        return False

@@ -11,10 +11,13 @@ from rich.pretty import pprint
 
 from chronus import version
 from chronus.cli import fake_data, plot_energy
+from chronus.domain.benchmark_service import BenchmarkService
 from chronus.model.svm import config_model
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
+from chronus.SystemIntegration.csv_repository import CsvRunRepository
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
+from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
 from chronus.SystemIntegration.repository import Repository
 
 name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
@@ -28,6 +31,10 @@ class Color(str, Enum):
     magenta = "magenta"
     yellow = "yellow"
     green = "green"
+
+
+FORMAT = "%(message)s"
+logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()])
 
 
 app = typer.Typer(
@@ -150,8 +157,12 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
     print(json.dumps(config))
 
 
+# add partician compute
+
+
 @app.command(name="cpu")
 def debug(
+    hpcg_path: str,
     print_version: bool = typer.Option(
         None,
         "-v",
@@ -159,13 +170,34 @@ def debug(
         callback=version_callback,
         is_eager=True,
         help="Prints the version of the chronus package.",
-    )
+    ),
+    debug: bool = typer.Option(
+        False,
+        "-d",
+        "--debug",
+        help="Print debug information.",
+    ),
+    csv_path: str = "runs.csv",
 ):
-    cpu_service = LsCpuInfoService()
-    pprint(f"CPU:         {cpu_service.get_cpu_info().cpu}")
-    pprint(f"Frequencies: {cpu_service.get_frequencies()}")
-    pprint(f"Cores:       {cpu_service.get_cores()}")
+    if debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+    import os
 
+    full_path = os.path.abspath(hpcg_path)
+    called_from_dir = os.getcwd()
+    benchmark = BenchmarkService(
+        cpu_info_service=LsCpuInfoService(),
+        application_runner=HpcgService(full_path),
+        benchmark_repository=CsvRunRepository(called_from_dir + "/" + csv_path),
+        system_service=IpmiSystemService(),
+    )
+
+    benchmark.run()
+
+
+# delete output dir if exception
+# error if exists
+# if job failed, continue
 
 if __name__ == "__main__":
     app()

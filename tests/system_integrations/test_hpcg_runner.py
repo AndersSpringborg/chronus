@@ -131,7 +131,9 @@ def test_hpcg_run_calls_sbatch(hpcg_service_temp_factory, tmpdir, mocker):
     # Assert
     assert (
         mocker.call(
-            ["sbatch", "HPCG_BENCHMARK.slurm"], cwd=str(tmpdir.join("hpcg_benchmark_output"))
+            ["sbatch", "HPCG_BENCHMARK.slurm"],
+            cwd=str(tmpdir.join("hpcg_benchmark_output")),
+            stdout=subprocess.PIPE,
         )
         in subprocess.run.call_args_list
     )
@@ -158,7 +160,7 @@ def test_hpcg_is_running_is_when_scontrol_running(hpcg_service_temp_factory, moc
     # Assert
     assert is_running is True
     mocked_subprocess_run.assert_called_with(
-        ["scontrol", "show", "job", job_id], stdout=subprocess.PIPE
+        ["scontrol", "show", "job", str(job_id)], stdout=subprocess.PIPE
     )
 
 
@@ -185,7 +187,7 @@ def test_hpcg_is_not_running_when_scontrol_completed(
     # Assert
     assert is_running is False
     mocked_subprocess_run.assert_called_with(
-        ["scontrol", "show", "job", job_id], stdout=subprocess.PIPE
+        ["scontrol", "show", "job", str(job_id)], stdout=subprocess.PIPE
     )
 
 
@@ -208,7 +210,7 @@ def test_hpcg_is_getting_the_job_id_from_scontrol(hpcg_service_temp_factory, moc
 
     # Assert
     mocked_subprocess_run.assert_called_with(
-        ["scontrol", "show", "job", job_id], stdout=subprocess.PIPE
+        ["scontrol", "show", "job", str(job_id)], stdout=subprocess.PIPE
     )
 
 
@@ -277,6 +279,21 @@ def test_files_are_deleted_after_is_running_is_returning_false(
     assert not tmpdir.join("hpcg_benchmark_output").isdir()
 
 
+def test_if_dir_exists_throw_error(
+    hpcg_service_temp_factory, tmpdir, mock_subprocess_run, make_file
+):
+    # Arrange
+    app_runner = hpcg_service_temp_factory()
+    app_runner.prepare()
+    # tmpdir.mkdir("hpcg_benchmark_output")
+    # Act
+    with pytest.raises(FileExistsError):
+        app_runner.prepare()
+
+    # Assert
+    assert tmpdir.join("hpcg_benchmark_output").isdir()
+
+
 HPCG_DAT_FILE_CONTENT = """HPCG benchmark input file
 Benchmarked on 2020-11-24 14:00:00
 104 104 104
@@ -286,12 +303,12 @@ HPCG_SLURM_FILE_CONTENT = """#!/bin/bash
 #SBATCH --job-name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
 #SBATCH --error=HPCG_BENCHMARK.err
-#SBATCH --n=10
+#SBATCH --ntasks=10
 #SBATCH --cpu-freq=1500000
 
 srun --mpi=pmix_v4 /test/xhpcg"""
 
-SCONTROL_IS_RUNNING_OUTPUT = """JobId=450 JobName=RUN_CPU.slurm
+SCONTROL_IS_RUNNING_OUTPUT = b"""JobId=450 JobName=RUN_CPU.slurm
    UserId=aaen(1000) GroupId=aaen(1000) MCS_label=N/A
    Priority=4294901754 Nice=0 Account=(null) QOS=(null)
    JobState=RUNNING Reason=None Dependency=(null)
@@ -320,7 +337,7 @@ SCONTROL_IS_RUNNING_OUTPUT = """JobId=450 JobName=RUN_CPU.slurm
    Power=
 
                               """
-SCONTROL_IS_COMPLETED_OUTPUT = """JobId=450 JobName=RUN_CPU.slurm
+SCONTROL_IS_COMPLETED_OUTPUT = b"""JobId=450 JobName=RUN_CPU.slurm
    UserId=aaen(1000) GroupId=aaen(1000) MCS_label=N/A
    Priority=4294901754 Nice=0 Account=(null) QOS=(null)
    JobState=COMPLETED Reason=None Dependency=(null)

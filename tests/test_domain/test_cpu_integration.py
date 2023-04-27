@@ -40,12 +40,12 @@ def test_no_model_number_cpu(mock_subprocess_run):
 
 def test_throws_exception_when_lscpu_fails(mock_subprocess_run):
     mock_subprocess_run().return_value = subprocess.CompletedProcess(
-        args="lscpu", returncode=1, stdout=""
+        args="lscpu", returncode=1, stdout="", stderr="Not found"
     )
 
     with pytest.raises(Exception) as exc_info:
         LsCpuInfoService().get_cpu_info()
-    assert exc_info.value.args[0] == "Failed to run lscpu"
+    assert exc_info.value.args[0] == "Failed to run lscpu: Not found"
 
 
 def test_get_cores(mock_subprocess_run):
@@ -61,12 +61,12 @@ def test_get_cores(mock_subprocess_run):
 
 def test_get_cores_throws_exception_when_lscpu_fails(mock_subprocess_run):
     mock_subprocess_run().return_value = subprocess.CompletedProcess(
-        args="lscpu", returncode=1, stdout=""
+        args="lscpu", returncode=1, stdout="", stderr="Not found"
     )
 
     with pytest.raises(Exception) as exc_info:
         LsCpuInfoService().get_cores()
-    assert exc_info.value.args[0] == "Failed to run lscpu"
+    assert exc_info.value.args[0] == "Failed to run lscpu: Not found"
 
 
 def test_get_cores_return_zero_when_no_cores_found(mock_subprocess_run):
