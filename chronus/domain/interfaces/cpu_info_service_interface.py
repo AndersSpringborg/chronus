@@ -5,16 +5,14 @@ from dataclasses import dataclass
 
 @dataclass
 class CpuInfo:
-    cpu: str
-    pass
+    """ Returns the number of cores in the system. If the system has hyperthreading, this method should return the
+    number of physical cores"""
+    cpu: str = ""
+    cores: int = 0
+    threads_per_core: int = 1
+    frequencies: List[float] = None
 
 
 class CpuInfoServiceInterface:
     def get_cpu_info(self) -> CpuInfo:
-        pass
-
-    def get_frequencies(self) -> List[float]:
-        pass
-
-    def get_cores(self) -> int:
         pass

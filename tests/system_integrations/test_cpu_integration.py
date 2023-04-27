@@ -3,19 +3,30 @@ import subprocess
 import pytest
 
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
-from tests.test_domain.fixtures import mock_subprocess_run
-
-# pytest fixture to mock the subprocess.run method
+from tests.test_domain.fixtures import mock_subprocess_run, ls_cpu_output
 
 
 @pytest.fixture
-def mock_frequency_file(mocker):
-    # Read a mocked /etc/release file
+def mock_system_calls(mocker):
+    mocked_lscpu = mocker.patch.object(
+        subprocess,
+        "run",
+        return_value=subprocess.CompletedProcess(args="lscpu", returncode=0, stdout=ls_cpu_output),
+    )
+
     mocked_etc_release_data = mocker.mock_open(read_data="2500000 2200000 1500000 \n")
-    mocker.patch("builtins.open", mocked_etc_release_data)
+    mocked_frequency_file = mocker.patch("builtins.open", mocked_etc_release_data)
+
+    def get_mock(choice):
+        if choice == "lscpu":
+            return mocked_lscpu
+        elif choice == "frequency_file":
+            return mocked_frequency_file
+
+    return get_mock
 
 
-def test_parses_model_number_cpu(mock_subprocess_run):
+def test_parses_model_number_cpu(mock_system_calls):
     # Arrange
 
     # Act
@@ -25,9 +36,9 @@ def test_parses_model_number_cpu(mock_subprocess_run):
     assert cpu_info.cpu == "AMD EPYC 7502P 32-Core Processor"
 
 
-def test_no_model_number_cpu(mock_subprocess_run):
+def test_no_model_number_cpu(mock_system_calls):
     # Arrange
-    mock_subprocess_run().return_value = subprocess.CompletedProcess(
+    mock_system_calls("lscpu").return_value = subprocess.CompletedProcess(
         args="lscpu", returncode=0, stdout=""
     )
 
@@ -38,8 +49,8 @@ def test_no_model_number_cpu(mock_subprocess_run):
     assert cpu_info.cpu == "Unknown"
 
 
-def test_throws_exception_when_lscpu_fails(mock_subprocess_run):
-    mock_subprocess_run().return_value = subprocess.CompletedProcess(
+def test_throws_exception_when_lscpu_fails(mock_system_calls):
+    mock_system_calls("lscpu").return_value = subprocess.CompletedProcess(
         args="lscpu", returncode=1, stdout="", stderr="Not found"
     )
 
@@ -48,52 +59,42 @@ def test_throws_exception_when_lscpu_fails(mock_subprocess_run):
     assert exc_info.value.args[0] == "Failed to run lscpu: Not found"
 
 
-def test_get_cores(mock_subprocess_run):
+def test_get_cores(mock_system_calls):
     # Arrange
-    expected_cores = 64
+    expected_cores = 32
 
     # Act
-    cores = LsCpuInfoService().get_cores()
+    info = LsCpuInfoService().get_cpu_info()
 
     # Assert
-    assert cores == expected_cores
+    assert info.cores == expected_cores
 
 
-def test_get_cores_throws_exception_when_lscpu_fails(mock_subprocess_run):
-    mock_subprocess_run().return_value = subprocess.CompletedProcess(
-        args="lscpu", returncode=1, stdout="", stderr="Not found"
-    )
-
-    with pytest.raises(Exception) as exc_info:
-        LsCpuInfoService().get_cores()
-    assert exc_info.value.args[0] == "Failed to run lscpu: Not found"
-
-
-def test_get_cores_return_zero_when_no_cores_found(mock_subprocess_run):
-    mock_subprocess_run().return_value = subprocess.CompletedProcess(
+def test_get_cores_return_zero_when_no_cores_found(mock_system_calls):
+    mock_system_calls("lscpu").return_value = subprocess.CompletedProcess(
         args="lscpu", returncode=0, stdout=""
     )
 
-    cores = LsCpuInfoService().get_cores()
+    info = LsCpuInfoService().get_cpu_info()
 
-    assert cores == 0
+    assert info.cores == 0
 
 
-def test_get_frequencies(mock_frequency_file):
+def test_get_frequencies(mock_system_calls):
     # Arrange
     expected_frequencies = [1_500_000, 2_200_000, 2_500_000]
 
     # Act
-    frequencies = LsCpuInfoService().get_frequencies()
+    info = LsCpuInfoService().get_cpu_info()
 
     # Assert
-    assert frequencies == expected_frequencies
+    assert info.frequencies == expected_frequencies
 
 
 def test_get_frequencies_throws_exception_when_cat_fails(mocker):
     mocker.patch("builtins.open", side_effect=IOError("Failed to open file"))
     try:
-        LsCpuInfoService().get_frequencies()
+        LsCpuInfoService()._get_frequencies()
     except Exception as e:
         assert (
             e.args[0]
@@ -101,17 +102,12 @@ def test_get_frequencies_throws_exception_when_cat_fails(mocker):
         )
 
 
-def xtest_get_frequency_when_cores_have_different_frequencies(mock_frequency_file):
+def test_get_threads_per_core(mock_system_calls):
     # Arrange
-    mock_subprocess_run.return_value = subprocess.CompletedProcess(
-        args="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies",
-        returncode=0,
-        stdout="1500000 2200000 2500000\n1600000 2200000 2500000",
-    )
-    expected_frequencies = [2_200_000, 2_500_000]
+    expected_threads_per_core = 2
 
     # Act
-    frequencies = LsCpuInfoService().get_frequencies()
+    info = LsCpuInfoService().get_cpu_info()
 
     # Assert
-    assert frequencies == expected_frequencies
+    assert info.threads_per_core == expected_threads_per_core

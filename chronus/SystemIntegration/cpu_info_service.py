@@ -17,16 +17,16 @@ class LsCpuInfoService(CpuInfoServiceInterface):
 
         if output.returncode != 0:
             raise RuntimeError(f"Failed to run lscpu: {output.stderr}")
+        info = CpuInfo()
 
-        self.logger.debug("Parsing output of lscpu to get CPU model name")
-        model_name = re.search(r"Model name:\s+(.*)", output.stdout)
+        info.cpu = self._get_cpu_model_name(output.stdout)
+        info.cores = self._get_cores(output.stdout)
+        info.frequencies = self._get_frequencies()
+        info.threads_per_core = self._get_threads_per_core(output.stdout)
 
-        if model_name is None:
-            return CpuInfo("Unknown")
+        return info
 
-        return CpuInfo(model_name.group(1))
-
-    def get_frequencies(self) -> List[float]:
+    def _get_frequencies(self) -> List[float]:
         self.logger.debug("Reading available CPU frequencies")
         try:
             file = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies", "r")
@@ -46,18 +46,32 @@ class LsCpuInfoService(CpuInfoServiceInterface):
         self.logger.debug(f"Found available frequencies: {frequencies}")
         return frequencies
 
-    def get_cores(self) -> int:
-        self.logger.debug("Running lscpu command to get CPU cores")
-        output = subprocess.run("lscpu", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    def _get_cpu_model_name(self, stdout: str) -> str:
+        self.logger.debug("Parsing output of lscpu to get CPU model name")
+        model_name = re.search(r"Model name:\s+(.*)", stdout)
 
-        if output.returncode != 0:
-            raise RuntimeError(f"Failed to run lscpu: {output.stderr}")
+        if model_name is None:
+            self.logger.debug("Failed to find CPU model name")
+            return "Unknown"
 
-        # Regex that finds Model Name: <model name>
-        cores = re.search(r"CPU\(s\):\s+(.*)", output.stdout)
+        return model_name.group(1)
+
+    def _get_cores(self, stdout: str) -> int:
+        cores = re.search(r"Core\(s\) per socket:\s+(\d+)", stdout)
 
         if cores is None:
+            self.logger.debug("Failed to find cores")
             return 0
 
         self.logger.debug(f"Found {cores.group(1)} CPU cores")
         return int(cores.group(1))
+
+    def _get_threads_per_core(self, stdout:str) -> int:
+        threads_per_core = re.search(r"Thread\(s\) per core:\s+(\d+)", stdout)
+
+        if threads_per_core is None:
+            self.logger.debug("Failed to find threads per core")
+            return 0
+
+        self.logger.debug(f"Found {threads_per_core.group(1)} threads per core")
+        return int(threads_per_core.group(1))
