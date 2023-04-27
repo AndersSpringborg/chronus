@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass
 
 from dataclasses_json import dataclass_json
@@ -13,13 +14,22 @@ class Run:
     cores: int = 0
     frequency: float = 0.0
     gflops: float = 0.0
+    start_time: datetime.datetime = None
+    end_time: datetime.datetime = None
 
     def __post_init__(self):
         self._samples = []
+        self.start_time = datetime.datetime.now()
 
     @property
     def gflops_per_watt(self) -> float:
-        return self.gflops / self.watts
+        return self.gflops / self._average_power_draw()
+
+    def _average_power_draw(self) -> float:
+        return sum([sample.current_power_draw for sample in self._samples]) / len(self._samples)
+
+    def finish(self, end_time=None):
+        self.end_time = end_time or datetime.datetime.now()
 
     @property
     def energy_used_joules(self) -> float:
