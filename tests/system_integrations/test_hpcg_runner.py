@@ -312,10 +312,11 @@ HPCG_SLURM_FILE_CONTENT = """#!/bin/bash
 #SBATCH --job-name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
 #SBATCH --error=HPCG_BENCHMARK.err
+#SBATCH --nodes=1
 #SBATCH --ntasks=10
 #SBATCH --cpu-freq=1500000
 
-srun --mpi=pmix_v4 /test/xhpcg"""
+srun --mpi=pmix_v4 --ntasks-per-core=2 /test/xhpcg"""
 
 SCONTROL_IS_RUNNING_OUTPUT = b"""JobId=450 JobName=RUN_CPU.slurm
    UserId=aaen(1000) GroupId=aaen(1000) MCS_label=N/A

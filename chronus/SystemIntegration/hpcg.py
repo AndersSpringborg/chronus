@@ -97,10 +97,11 @@ class HpcgService(ApplicationRunnerInterface):
 #SBATCH --job-name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
 #SBATCH --error=HPCG_BENCHMARK.err
+#SBATCH --nodes=1
 #SBATCH --ntasks={cores}
 #SBATCH --cpu-freq={frequency}
 
-srun --mpi=pmix_v4 {self._hpcg_path}"""
+srun --mpi=pmix_v4 --ntasks-per-core=2 {self._hpcg_path}"""
 
     def _parse_gflops(self, output: str) -> float:
         gflops_parser = re.compile(r"GFLOP/s rating of=(?P<gflops>\d+\.\d+)")
