@@ -10,14 +10,14 @@ from rich.logging import RichHandler
 from rich.pretty import pprint
 
 from chronus import version
-from chronus.SystemIntegration.csv_repository import CsvRunRepository
-from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
 from chronus.cli import fake_data, plot_energy
 from chronus.domain.benchmark_service import BenchmarkService
 from chronus.model.svm import config_model
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
+from chronus.SystemIntegration.csv_repository import CsvRunRepository
 from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
+from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
 from chronus.SystemIntegration.repository import Repository
 
 name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
@@ -32,10 +32,9 @@ class Color(str, Enum):
     yellow = "yellow"
     green = "green"
 
+
 FORMAT = "%(message)s"
-logging.basicConfig(
-    level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
-)
+logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()])
 
 
 app = typer.Typer(
@@ -157,7 +156,9 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
 
     print(json.dumps(config))
 
+
 # add partician compute
+
 
 @app.command(name="cpu")
 def debug(
@@ -176,11 +177,12 @@ def debug(
         "--debug",
         help="Print debug information.",
     ),
-    csv_path: str = 'runs.csv'
+    csv_path: str = "runs.csv",
 ):
     if debug:
         logging.getLogger().setLevel(logging.DEBUG)
     import os
+
     full_path = os.path.abspath(hpcg_path)
     called_from_dir = os.getcwd()
     benchmark = BenchmarkService(
@@ -191,7 +193,6 @@ def debug(
     )
 
     benchmark.run()
-
 
 
 # delete output dir if exception

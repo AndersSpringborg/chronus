@@ -1,5 +1,6 @@
-import logging
 from typing import List
+
+import logging
 import re
 import subprocess
 
@@ -9,6 +10,7 @@ from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo, CpuInf
 class LsCpuInfoService(CpuInfoServiceInterface):
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+
     def get_cpu_info(self) -> CpuInfo:
         self.logger.debug("Running lscpu command to get CPU info")
         output = subprocess.run("lscpu", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

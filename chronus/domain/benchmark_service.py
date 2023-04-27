@@ -42,7 +42,9 @@ class BenchmarkService:
 
         configurations = Configurations(cores, frequencies)
         for configuration in configurations:
-            self.logger.info(f"Starting benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz")
+            self.logger.info(
+                f"Starting benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz"
+            )
             run = Run(cpu=cpu, cores=configuration.cores, frequency=configuration.frequency)
             self.application_runner.prepare()
             self.application_runner.run(configuration.cores, configuration.frequency)
@@ -56,4 +58,6 @@ class BenchmarkService:
             self.application_runner.cleanup()
             self.run_repository.save(run)
 
-            self.logger.info(f"Benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz complete, GFLOPS: {run.gflops}")
+            self.logger.info(
+                f"Benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz complete, GFLOPS: {run.gflops}"
+            )

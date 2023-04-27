@@ -5,7 +5,6 @@ import pytest
 from chronus.SystemIntegration.hpcg import HpcgService
 from tests.test_domain.fixtures import mock_subprocess_run
 
-
 # 1. Find ud af hvordan jeg gerne vil kører hpcg -> hvordan skal hpcg.dat se ud
 # 2. Hvordan får jeg hpcg til at kører det i en besstemt path
 # ---- jeg vil gerne outputte i en makke 'hpcg_benchmark_output' i den mappe jeg er I, i mens jeg køer
@@ -132,7 +131,9 @@ def test_hpcg_run_calls_sbatch(hpcg_service_temp_factory, tmpdir, mocker):
     # Assert
     assert (
         mocker.call(
-            ["sbatch", "HPCG_BENCHMARK.slurm"], cwd=str(tmpdir.join("hpcg_benchmark_output")), stdout=subprocess.PIPE
+            ["sbatch", "HPCG_BENCHMARK.slurm"],
+            cwd=str(tmpdir.join("hpcg_benchmark_output")),
+            stdout=subprocess.PIPE,
         )
         in subprocess.run.call_args_list
     )
@@ -278,11 +279,13 @@ def test_files_are_deleted_after_is_running_is_returning_false(
     assert not tmpdir.join("hpcg_benchmark_output").isdir()
 
 
-def test_if_dir_exists_throw_error(hpcg_service_temp_factory, tmpdir, mock_subprocess_run, make_file):
+def test_if_dir_exists_throw_error(
+    hpcg_service_temp_factory, tmpdir, mock_subprocess_run, make_file
+):
     # Arrange
     app_runner = hpcg_service_temp_factory()
     app_runner.prepare()
-    #tmpdir.mkdir("hpcg_benchmark_output")
+    # tmpdir.mkdir("hpcg_benchmark_output")
     # Act
     with pytest.raises(FileExistsError):
         app_runner.prepare()

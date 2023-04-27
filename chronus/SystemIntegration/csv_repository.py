@@ -1,11 +1,12 @@
 import logging
 
+from chronus.domain.interfaces.benchmark_run_repository_interface import (
+    BenchmarkRunRepositoryInterface,
+)
 from chronus.domain.Run import Run
-from chronus.domain.interfaces.benchmark_run_repository_interface import BenchmarkRunRepositoryInterface
 
 
 class CsvRunRepository(BenchmarkRunRepositoryInterface):
-
     def __init__(self, path: str):
         self.logger = logging.getLogger(__name__)
         self.path = path
@@ -13,9 +14,9 @@ class CsvRunRepository(BenchmarkRunRepositoryInterface):
             self._backup_file()
         self._create_file()
 
-
     def _file_exists(self) -> bool:
         import os
+
         if os.path.exists(self.path):
             self.logger.info(f"File {self.path} already exists.")
             return True
@@ -33,5 +34,6 @@ class CsvRunRepository(BenchmarkRunRepositoryInterface):
 
     def _backup_file(self):
         import os
+
         os.rename(self.path, f"{self.path}.bak")
         self.logger.info(f"{self.path} has been backed up to {self.path}.bak.")

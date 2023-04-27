@@ -1,7 +1,7 @@
+import logging
 import os
 import re
 import subprocess
-import logging
 from time import sleep
 
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
@@ -34,7 +34,7 @@ class HpcgService(ApplicationRunnerInterface):
             raise FileExistsError("Output dir already exists")
         self._prepare_output_dir()
         self._prepare_hpcg_dat_file()
-        self.logger.info('Prepared HPCG Service')
+        self.logger.info("Prepared HPCG Service")
 
     def run(self, cores: int = 1, frequency: int = 1_500_000):
         slurm_file_content = self._generate_slurm_file_content(cores, frequency)
@@ -45,7 +45,9 @@ class HpcgService(ApplicationRunnerInterface):
             slurm_file.write(slurm_file_content)
 
         job: subprocess.CompletedProcess = subprocess.run(
-            ["sbatch", "HPCG_BENCHMARK.slurm"], cwd=self._output_dir + "hpcg_benchmark_output", stdout=subprocess.PIPE
+            ["sbatch", "HPCG_BENCHMARK.slurm"],
+            cwd=self._output_dir + "hpcg_benchmark_output",
+            stdout=subprocess.PIPE,
         )
 
         stdout = str(job.stdout)
@@ -53,7 +55,7 @@ class HpcgService(ApplicationRunnerInterface):
         job_id_str = re.search(r"Submitted batch job (\d+)", stdout).group(1)
 
         self._job_id = int(job_id_str)
-        self.logger.info(f'Job started with id: {self._job_id}')
+        self.logger.info(f"Job started with id: {self._job_id}")
 
     def is_running(self) -> bool:
         cmd = subprocess.run(["scontrol", "show", "job", str(self._job_id)], stdout=subprocess.PIPE)
@@ -70,13 +72,13 @@ class HpcgService(ApplicationRunnerInterface):
             self._output_dir + "hpcg_benchmark_output/" + output_file, "r"
         ).read()
         gflops = self._parse_output(output_file_content)
-        self.logger.debug(f'GFlops calculated: {gflops}')
+        self.logger.debug(f"GFlops calculated: {gflops}")
         return gflops
 
     def cleanup(self):
         # Delte all files in outpur dir, and then delete the dir
         os.system(f"rm -rf {self._output_dir}hpcg_benchmark_output")
-        self.logger.info('HPCG Service cleaned up')
+        self.logger.info("HPCG Service cleaned up")
 
     def _generate_slurm_file_content(self, cores, frequency) -> str:
         return f"""#!/bin/bash
