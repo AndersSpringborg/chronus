@@ -25,7 +25,7 @@ This is both a library and a CLI application for scheduling energy consumption. 
 
 ## 🚀 Installation
 ```
-dnf install chronus
+python3 -m pip install chronus
 chronus --help
 ```
 
