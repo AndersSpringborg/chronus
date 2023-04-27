@@ -1,9 +1,11 @@
 import time
 from datetime import datetime, timedelta
 
+import freezegun
 import pytest
 from freezegun import freeze_time
 
+from chronus.domain.Run import Run
 from chronus.domain.benchmark_service import BenchmarkService
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
 from chronus.domain.interfaces.benchmark_run_repository_interface import (
@@ -12,6 +14,7 @@ from chronus.domain.interfaces.benchmark_run_repository_interface import (
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo, CpuInfoServiceInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
 from chronus.domain.system_sample import SystemSample
+from tests.fixtures import datetime_from_string
 
 
 class FakeCpuInfoService(CpuInfoServiceInterface):
@@ -40,8 +43,8 @@ class FakeSystemService(SystemServiceInterface):
 
 
 class FakeApplication(ApplicationRunnerInterface):
-    def __init__(self, seconds: int):
-        self.seconds = seconds
+    def __init__(self, seconds: int = None):
+        self.seconds = seconds or 0
         self.__counter = 0
         self.gflops = 10.0
         self.cleanup_called = 0
@@ -65,9 +68,14 @@ class FakeApplication(ApplicationRunnerInterface):
 
 class FakeBencmarkRepository(BenchmarkRunRepositoryInterface):
     called = 0
+    runs: list[Run]
 
-    def save(self, benchmark):
+    def __init__(self):
+        self.runs = []
+
+    def save(self, run: Run) -> None:
         self.called += 1
+        self.runs.append(run)
 
 
 @pytest.fixture
@@ -167,15 +175,11 @@ def test_calls_cleanup_after_each_run(skip_sleep):
 
 def test_calls_prepare_before_each_run(skip_sleep):
     # Arrange
-    application_runner = FakeApplication(4)
-    benchmark_run_repository = FakeBencmarkRepository()
+    application_runner = FakeApplication()
     cpu_info_service = FakeCpuInfoService(cores=2, frequencies=[1.0])
-    system_service = FakeSystemService()
     benchmark = benchmark_fixture(
         cpu_info_service=cpu_info_service,
-        benchmark_repository=benchmark_run_repository,
         application=application_runner,
-        system_service=system_service,
     )
 
     # Act
@@ -183,3 +187,19 @@ def test_calls_prepare_before_each_run(skip_sleep):
 
     # Assert
     assert application_runner.prepare_called == 2
+
+@freezegun.freeze_time("2021-01-01 00:00:00")
+
+def test_benchmark_set_end_time_after_run_is_completed(skip_sleep):
+    # Arrange
+    repository = FakeBencmarkRepository()
+    benchmark = benchmark_fixture(
+        benchmark_repository=repository,
+    )
+
+    # Act
+    benchmark.run()
+
+    # Assert
+    run = repository.runs[0]
+    assert run.end_time == datetime_from_string("2021-01-01 00:00:00")

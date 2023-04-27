@@ -1,12 +1,10 @@
-import datetime
-
 import freezegun
 import pytest
 
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 from chronus.SystemIntegration.csv_repository import CsvRunRepository
-from tests.fixtures import create_datatime_with_seconds
+from tests.fixtures import datetime_from_string
 
 HEADERS = "cpu,cores,frequency,gflops,energy_used,gflops_per_watt,start_time,end_time\n"
 
@@ -14,10 +12,6 @@ HEADERS = "cpu,cores,frequency,gflops,energy_used,gflops_per_watt,start_time,end
 @pytest.fixture
 def csv_file(tmp_path):
     return tmp_path / "test.csv"
-
-
-def datetime_from_string(date_string: str) -> datetime.datetime:
-    return datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
 
 
 def test_headers_are_written_on_create(csv_file):
