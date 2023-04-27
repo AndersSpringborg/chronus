@@ -135,7 +135,7 @@ def test_benchmark_have_speed_after_run():
     benchmark.run()
 
     run = repository.runs[0]
-    assert run.result == gflops
+    assert run.flop == gflops
 
 
 def test_benchmark_have_result_after_run():
@@ -149,7 +149,7 @@ def test_benchmark_have_result_after_run():
     benchmark.run()
 
     run = repository.runs[0]
-    assert run.result == operations_done
+    assert run.flop == operations_done
 
 
 def test_benchmark_saved_after_each_configuration(skip_sleep):

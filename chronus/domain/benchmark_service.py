@@ -56,7 +56,7 @@ class BenchmarkService:
             run.add_sample(self.system_service.sample())
             run.finish()
             run.gflops = self.application_runner.gflops
-            run.result = self.application_runner.result
+            run.flop = self.application_runner.result
             self.application_runner.cleanup()
             self.run_repository.save(run)
 

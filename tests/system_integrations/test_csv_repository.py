@@ -6,7 +6,7 @@ from chronus.domain.system_sample import SystemSample
 from chronus.SystemIntegration.csv_repository import CsvRunRepository
 from tests.fixtures import datetime_from_string
 
-HEADERS = "cpu,cores,frequency,gflops,energy_used,gflops_per_watt,start_time,end_time\n"
+HEADERS = "cpu,cores,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def test_if_file_exists_move_it_to_backup(csv_file):
 def test_save_run(csv_file):
     # Arrange
     repo = CsvRunRepository(csv_file)
-    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e+8)
     run.add_sample(
         SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:1"), current_power_draw=10.0)
     )
@@ -54,8 +54,8 @@ def test_save_run(csv_file):
     repo.save(run)
 
     # Assert
-    # cpu=test, cores=2, frequency=1.5, gflops=30.0, energy_used=10.0, gflops_per_watt=3.0
+    # cpu=test, cores=2, frequency=1.5, gflops=30.0, flop=30.0+8 energy_used=10.0, gflops_per_watt=3.0
     assert (
         csv_file.read_text()
-        == HEADERS + "test,2,1.5,30.0,10.0,3.0,2020-01-01 00:00:01,2020-01-01 00:00:02\n"
+        == HEADERS + "test,2,1.5,30.0,30.0,10.0,3.0,2020-01-01 00:00:01,2020-01-01 00:00:02\n"
     )

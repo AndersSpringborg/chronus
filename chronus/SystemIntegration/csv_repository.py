@@ -5,7 +5,7 @@ from chronus.domain.interfaces.benchmark_run_repository_interface import (
 )
 from chronus.domain.Run import Run
 
-CSV_HEADERS = "cpu,cores,frequency,gflops,energy_used,gflops_per_watt,start_time,end_time\n"
+CSV_HEADERS = "cpu,cores,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"
 
 
 class CsvRunRepository(BenchmarkRunRepositoryInterface):
@@ -31,8 +31,9 @@ class CsvRunRepository(BenchmarkRunRepositoryInterface):
 
     def save(self, run: Run) -> None:
         with open(self.path, "a") as f:
+            gflop = run.flop / 1.0e+8
             f.write(
-                f"{run.cpu},{run.cores},{run.frequency},{run.gflops},{run.energy_used_joules},{run.gflops_per_watt},{run.start_time},{run.end_time}\n"
+                f"{run.cpu},{run.cores},{run.frequency},{run.gflops},{gflop},{run.energy_used_joules},{run.gflops_per_watt},{run.start_time},{run.end_time}\n"
             )
         self.logger.info(f"Run data has been saved to {self.path}.")
 
