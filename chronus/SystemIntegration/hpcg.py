@@ -36,8 +36,8 @@ class HpcgService(ApplicationRunnerInterface):
         self._prepare_hpcg_dat_file()
         self.logger.info("Prepared HPCG Service")
 
-    def run(self, cores: int = 1, frequency: int = 1_500_000):
-        slurm_file_content = self._generate_slurm_file_content(cores, frequency)
+    def run(self, cores: int = 1, frequency: int = 1_500_000, thread_per_core=1):
+        slurm_file_content = self._generate_slurm_file_content(cores, frequency, thread_per_core)
 
         with open(
             self._output_dir + "hpcg_benchmark_output/HPCG_BENCHMARK.slurm", "w"
@@ -66,31 +66,43 @@ class HpcgService(ApplicationRunnerInterface):
 
     @property
     def gflops(self) -> float:
+        output_file_content = self._get_output_file_content()
+        gflops = self._parse_gflops(output_file_content)
+        self.logger.debug(f"GFlops calculated: {gflops}")
+        return gflops
+
+    def _get_output_file_content(self):
         files = os.listdir(self._output_dir + "hpcg_benchmark_output")
         output_file = [f for f in files if re.match(r"HPCG-Benchmark_", f)][0]
         output_file_content = open(
             self._output_dir + "hpcg_benchmark_output/" + output_file, "r"
         ).read()
-        gflops = self._parse_output(output_file_content)
-        self.logger.debug(f"GFlops calculated: {gflops}")
-        return gflops
+        return output_file_content
+
+    @property
+    def result(self) -> float:
+        output_file_content = self._get_output_file_content()
+        results = self._parse_result(output_file_content)
+        self.logger.debug(f"Results parsed: {results}")
+        return results
 
     def cleanup(self):
         # Delte all files in outpur dir, and then delete the dir
         os.system(f"rm -rf {self._output_dir}hpcg_benchmark_output")
         self.logger.info("HPCG Service cleaned up")
 
-    def _generate_slurm_file_content(self, cores, frequency) -> str:
+    def _generate_slurm_file_content(self, cores, frequency, thread_per_core) -> str:
         return f"""#!/bin/bash
 #SBATCH --job-name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
 #SBATCH --error=HPCG_BENCHMARK.err
+#SBATCH --nodes=1
 #SBATCH --ntasks={cores}
 #SBATCH --cpu-freq={frequency}
 
-srun --mpi=pmix_v4 {self._hpcg_path}"""
+srun --mpi=pmix_v4 --ntasks-per-core={thread_per_core} {self._hpcg_path}"""
 
-    def _parse_output(self, output: str) -> float:
+    def _parse_gflops(self, output: str) -> float:
         gflops_parser = re.compile(r"GFLOP/s rating of=(?P<gflops>\d+\.\d+)")
         match = gflops_parser.search(output)
 
@@ -100,6 +112,19 @@ srun --mpi=pmix_v4 {self._hpcg_path}"""
             return gflops
 
         self.logger.warning("GFLOP/s rating not found in output")
+        return 0.0
+
+    def _parse_result(self, output_file_content: str) -> float:
+        # parse Floating Point Operations Summary::Total=1.36952e+08 to 136952000.0
+        result_parser = re.compile(
+            r"Floating Point Operations Summary::Total=(?P<result>\d+\.\d+e\+\d+)"
+        )
+        match = result_parser.search(output_file_content)
+        if match:
+            result = float(match.group("result"))
+            self.logger.info(f"Result found: {result}")
+            return result
+        self.logger.warning("Result not found in output")
         return 0.0
 
     def _prepare_output_dir(self):

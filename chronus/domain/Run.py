@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass
 
 from dataclasses_json import dataclass_json
@@ -11,18 +12,38 @@ class Run:
     _samples: list[SystemSample] = None
     cpu: str = ""
     cores: int = 0
+    threads_per_core: int = 1
     frequency: float = 0.0
     gflops: float = 0.0
+    flop: float = 0.0
+    start_time: datetime.datetime = None
+    end_time: datetime.datetime = None
 
     def __post_init__(self):
         self._samples = []
+        self.start_time = datetime.datetime.now()
+        self._gflops_per_watt = None
+        self._energy_used_joules = None
 
     @property
     def gflops_per_watt(self) -> float:
-        return self.gflops / self.watts
+        if self._gflops_per_watt is None:
+            self._gflops_per_watt = self.gflops / self._average_power_draw()
+        return self._gflops_per_watt
+
+    def _average_power_draw(self) -> float:
+        return sum([sample.current_power_draw for sample in self._samples]) / len(self._samples)
+
+    def finish(self, end_time: datetime.datetime = None):
+        self.end_time = end_time or datetime.datetime.now()
 
     @property
-    def energy_used(self) -> float:
+    def energy_used_joules(self) -> float:
+        if self._energy_used_joules is None:
+            self._energy_used_joules = self._calculate_energy_used_joules()
+        return self._energy_used_joules
+
+    def _calculate_energy_used_joules(self) -> float:
         energy = 0.0
         previous_timestamp = self._samples[0].timestamp if len(self._samples) > 0 else None
         previous_power_draw = (

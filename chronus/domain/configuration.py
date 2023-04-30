@@ -2,11 +2,14 @@ from typing import List
 
 from dataclasses import dataclass
 
+from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo
+
 
 @dataclass
 class Configuration:
     cores: int
     frequency: float
+    threads_per_core: int
 
 
 def make_core_interval(cores_number: int):
@@ -19,19 +22,20 @@ def make_core_interval(cores_number: int):
     return cores
 
 
-def make_configurations(cores_number: int, frequencies: List[float]):
-    cores = make_core_interval(cores_number)
+def make_configurations(cpu_info: CpuInfo) -> List[Configuration]:
+    cores = make_core_interval(cpu_info.cores)
 
     configurations = []
     for core in cores:
-        for frequency in frequencies:
-            configurations.append(Configuration(core, frequency))
+        for thread in range(1, cpu_info.threads_per_core + 1):
+            for frequency in cpu_info.frequencies:
+                configurations.append(Configuration(core, frequency, thread))
     return configurations
 
 
 class Configurations:
-    def __init__(self, cores: int, frequencies: List[float]):
-        self.__configurations = make_configurations(cores, frequencies)
+    def __init__(self, cpu_info: CpuInfo):
+        self.__configurations = make_configurations(cpu_info)
 
     def __iter__(self):
         return iter(self.__configurations)

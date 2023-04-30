@@ -5,23 +5,6 @@ import pytest
 from chronus.SystemIntegration.hpcg import HpcgService
 from tests.test_domain.fixtures import mock_subprocess_run
 
-# 1. Find ud af hvordan jeg gerne vil kører hpcg -> hvordan skal hpcg.dat se ud
-# 2. Hvordan får jeg hpcg til at kører det i en besstemt path
-# ---- jeg vil gerne outputte i en makke 'hpcg_benchmark_output' i den mappe jeg er I, i mens jeg køer
-# ---- Derefter slette mappen igen
-# 3. Generere HPCG.DAT
-# 4. Generer HPCG_BENCHMARK.SLURM
-# Gem filerne i 'hpcg_benchmark_output'
-# 5. Kør 'sbatch HPCG_BENCHMARK.SLURM' inde fra 'hpcg_benchmark_output'
-# ---- returnere job id 'Submitted batch job 447'
-# 6. Kør 'squeue -u <username>' og find ud af om der er en job der hedder 'hpcg_benchmark'
-# 7. Find ud af om jobbet stadig kører med 'squeue -u <username>' og 'sacct -u <username>'
-# 8. Hent output fra 'hpcg_benchmark_output' og gem det i 'hpcg_benchmark_output'
-# 9. Parse outputtet og gem det i en database
-# 10. Slet 'hpcg_benchmark_output' igen
-# ---- Jeg ved at der kun er de filer, så jeg kan bare slette alt med HPCG i navnet
-# 11. Gå til 1
-
 
 @pytest.fixture
 def make_file(tmpdir):
@@ -34,7 +17,7 @@ def make_file(tmpdir):
 
 
 @pytest.fixture
-def hpcg_service_temp_factory(tmpdir, mocker):
+def hpcg_service_factory(tmpdir, mocker):
     mock_run = mocker.patch.object(
         subprocess,
         "run",
@@ -55,10 +38,10 @@ def test_initiate_hpcg_service():
     assert app_runner is not None
 
 
-def test_hpcg_makes_dir_running_folder(hpcg_service_temp_factory, tmpdir):
+def test_hpcg_makes_dir_running_folder(hpcg_service_factory, tmpdir):
     # Arrange
     # Mock make dir call
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
 
     # Act
     app_runner.prepare()
@@ -67,10 +50,10 @@ def test_hpcg_makes_dir_running_folder(hpcg_service_temp_factory, tmpdir):
     assert tmpdir.join("hpcg_benchmark_output").isdir()
 
 
-def test_hpcg_makes_dat_file(hpcg_service_temp_factory, tmpdir):
+def test_hpcg_makes_dat_file(hpcg_service_factory, tmpdir):
     # Arrange
     # Mock make dir call
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
 
     # Act
     app_runner.prepare()
@@ -79,10 +62,10 @@ def test_hpcg_makes_dat_file(hpcg_service_temp_factory, tmpdir):
     assert tmpdir.join("hpcg_benchmark_output/hpcg.dat").isfile()
 
 
-def test_hpcg_dat_file_contains_correct_content(hpcg_service_temp_factory, tmpdir):
+def test_hpcg_dat_file_contains_correct_content(hpcg_service_factory, tmpdir):
     # Arrange
     # Mock make dir call
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
 
     # Act
     app_runner.prepare()
@@ -91,10 +74,10 @@ def test_hpcg_dat_file_contains_correct_content(hpcg_service_temp_factory, tmpdi
     assert tmpdir.join("hpcg_benchmark_output/hpcg.dat").read() == HPCG_DAT_FILE_CONTENT
 
 
-def test_hpcg_makes_slurm_file(hpcg_service_temp_factory, tmpdir):
+def test_hpcg_makes_slurm_file(hpcg_service_factory, tmpdir):
     # Arrange
     # Mock make dir call
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
 
     # Act
@@ -105,13 +88,13 @@ def test_hpcg_makes_slurm_file(hpcg_service_temp_factory, tmpdir):
     assert tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").isfile()
 
 
-def test_hpcg_slurm_file_contains_correct_content(hpcg_service_temp_factory, tmpdir):
+def test_hpcg_slurm_file_contains_correct_content(hpcg_service_factory, tmpdir):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
 
     # Act
-    app_runner.run(cores=10, frequency=1_500_000)
+    app_runner.run(cores=10, thread_per_core=2, frequency=1_500_000)
 
     # Assert
 
@@ -120,9 +103,9 @@ def test_hpcg_slurm_file_contains_correct_content(hpcg_service_temp_factory, tmp
     )
 
 
-def test_hpcg_run_calls_sbatch(hpcg_service_temp_factory, tmpdir, mocker):
+def test_hpcg_run_calls_sbatch(hpcg_service_factory, tmpdir, mocker):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
 
     # Act
@@ -139,9 +122,9 @@ def test_hpcg_run_calls_sbatch(hpcg_service_temp_factory, tmpdir, mocker):
     )
 
 
-def test_hpcg_is_running_is_when_scontrol_running(hpcg_service_temp_factory, mock_subprocess_run):
+def test_hpcg_is_running_is_when_scontrol_running(hpcg_service_factory, mock_subprocess_run):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
     job_id = 449
     mocked_subprocess_run = mock_subprocess_run()
@@ -164,11 +147,9 @@ def test_hpcg_is_running_is_when_scontrol_running(hpcg_service_temp_factory, moc
     )
 
 
-def test_hpcg_is_not_running_when_scontrol_completed(
-    hpcg_service_temp_factory, mock_subprocess_run
-):
+def test_hpcg_is_not_running_when_scontrol_completed(hpcg_service_factory, mock_subprocess_run):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
     job_id = 449
     mocked_subprocess_run = mock_subprocess_run()
@@ -191,9 +172,9 @@ def test_hpcg_is_not_running_when_scontrol_completed(
     )
 
 
-def test_hpcg_is_getting_the_job_id_from_scontrol(hpcg_service_temp_factory, mock_subprocess_run):
+def test_hpcg_is_getting_the_job_id_from_scontrol(hpcg_service_factory, mock_subprocess_run):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
     job_id = 300
     mocked_subprocess_run = mock_subprocess_run()
@@ -214,11 +195,54 @@ def test_hpcg_is_getting_the_job_id_from_scontrol(hpcg_service_temp_factory, moc
     )
 
 
+def test_cores_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+
+    # Act
+    app_runner.run(cores=5, frequency=1_500_000)
+
+    # Assert
+    content = tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").read()
+
+    assert "#SBATCH --ntasks=5" in content
+
+
+def test_frequency_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+
+    # Act
+    app_runner.run(cores=5, frequency=2_000_000)
+
+    # Assert
+    content = tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").read()
+
+    assert "#SBATCH --cpu-freq=200000" in content
+
+
+def test_thread_per_core_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+
+    # Act
+    app_runner.run(cores=5, thread_per_core=5, frequency=1_500_000)
+
+    # Assert
+    content = tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").readlines()
+    last_line = content[-1]
+
+    assert "--ntasks-per-core=5" in last_line
+
+
 def test_hpcg_gives_correct_result_when_scontrol_completed(
-    hpcg_service_temp_factory, mock_subprocess_run, make_file
+    hpcg_service_factory, mock_subprocess_run, make_file
 ):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
     job_id = 449
     mocked_subprocess_run = mock_subprocess_run()
@@ -247,9 +271,9 @@ def test_hpcg_gives_correct_result_when_scontrol_completed(
         123456.123456,
     ],
 )
-def test_parse_gflops(gflops, hpcg_service_temp_factory, mock_subprocess_run, make_file):
+def test_parse_gflops(gflops, hpcg_service_factory, mock_subprocess_run, make_file):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
 
     make_file("hpcg20230424T041652.txt", HPCG_LOG)
@@ -265,11 +289,37 @@ def test_parse_gflops(gflops, hpcg_service_temp_factory, mock_subprocess_run, ma
     assert gflops_from_app_runner == gflops
 
 
+@pytest.mark.parametrize(
+    ("results,in_floats"),
+    [
+        ("1.36952e+08", 136952000.0),
+        ("1.0e+08", 100000000.0),
+        ("2.0e+02", 200.0),
+    ],
+)
+def test_parse_results(results, in_floats, hpcg_service_factory, mock_subprocess_run, make_file):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+
+    make_file("hpcg20230424T041652.txt", HPCG_LOG)
+    make_file(
+        "HPCG-Benchmark_3.1_2023-04-24_04-16-52.txt",
+        f"Floating Point Operations Summary::Total={results}",
+    )
+
+    # Act
+    results_from_app_runner = app_runner.result
+
+    # Assert
+    assert results_from_app_runner == in_floats
+
+
 def test_files_are_deleted_after_is_running_is_returning_false(
-    hpcg_service_temp_factory, tmpdir, mock_subprocess_run, make_file
+    hpcg_service_factory, tmpdir, mock_subprocess_run, make_file
 ):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
 
     # Act
@@ -279,11 +329,9 @@ def test_files_are_deleted_after_is_running_is_returning_false(
     assert not tmpdir.join("hpcg_benchmark_output").isdir()
 
 
-def test_if_dir_exists_throw_error(
-    hpcg_service_temp_factory, tmpdir, mock_subprocess_run, make_file
-):
+def test_if_dir_exists_throw_error(hpcg_service_factory, tmpdir, mock_subprocess_run, make_file):
     # Arrange
-    app_runner = hpcg_service_temp_factory()
+    app_runner = hpcg_service_factory()
     app_runner.prepare()
     # tmpdir.mkdir("hpcg_benchmark_output")
     # Act
@@ -303,10 +351,11 @@ HPCG_SLURM_FILE_CONTENT = """#!/bin/bash
 #SBATCH --job-name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
 #SBATCH --error=HPCG_BENCHMARK.err
+#SBATCH --nodes=1
 #SBATCH --ntasks=10
 #SBATCH --cpu-freq=1500000
 
-srun --mpi=pmix_v4 /test/xhpcg"""
+srun --mpi=pmix_v4 --ntasks-per-core=2 /test/xhpcg"""
 
 SCONTROL_IS_RUNNING_OUTPUT = b"""JobId=450 JobName=RUN_CPU.slurm
    UserId=aaen(1000) GroupId=aaen(1000) MCS_label=N/A

@@ -1,7 +1,8 @@
 class ApplicationRunnerInterface:
     gflops: float
+    result: float
 
-    def run(self, cores: int, frequency: float):
+    def run(self, cores: int, frequency: float, thread_per_core=1):
         pass
 
     def is_running(self) -> bool:
