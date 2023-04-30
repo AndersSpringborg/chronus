@@ -6,7 +6,7 @@ from chronus.domain.interfaces.benchmark_run_repository_interface import (
 )
 from chronus.domain.Run import Run
 
-CSV_HEADERS = "cpu,cores,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"
+CSV_HEADERS = "cpu,cores,thread_per_core,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"
 
 
 class CsvRunRepository(BenchmarkRunRepositoryInterface):
