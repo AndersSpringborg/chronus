@@ -3,7 +3,7 @@ import subprocess
 import pytest
 
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
-from tests.test_domain.fixtures import mock_subprocess_run, ls_cpu_output
+from tests.test_domain.fixtures import ls_cpu_output, mock_subprocess_run
 
 
 @pytest.fixture
@@ -111,5 +111,3 @@ def test_get_threads_per_core(mock_system_calls):
 
     # Assert
     assert info.threads_per_core == expected_threads_per_core
-
-

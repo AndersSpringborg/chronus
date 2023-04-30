@@ -86,7 +86,6 @@ class HpcgService(ApplicationRunnerInterface):
         self.logger.debug(f"Results parsed: {results}")
         return results
 
-
     def cleanup(self):
         # Delte all files in outpur dir, and then delete the dir
         os.system(f"rm -rf {self._output_dir}hpcg_benchmark_output")

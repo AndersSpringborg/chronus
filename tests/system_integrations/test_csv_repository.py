@@ -41,7 +41,7 @@ def test_if_file_exists_move_it_to_backup(csv_file):
 def test_save_run(csv_file):
     # Arrange
     repo = CsvRunRepository(csv_file)
-    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e+8)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e8)
     run.add_sample(
         SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:1"), current_power_draw=10.0)
     )
@@ -66,13 +66,15 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(csv_file):
     repo = CsvRunRepository(csv_file)
     start_time = datetime_from_string("2020-01-01 00:00:01")
     end_time = datetime_from_string("2020-01-01 00:00:02")
-    initial_run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e+8)
+    initial_run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e8)
     initial_run.start_time = start_time
     initial_run.end_time = end_time
     initial_run.add_sample(
-        SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:01"), current_power_draw=10.0))
+        SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:01"), current_power_draw=10.0)
+    )
     initial_run.add_sample(
-        SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:02"), current_power_draw=10.0))
+        SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:02"), current_power_draw=10.0)
+    )
 
     # Act
     repo.save(initial_run)
@@ -83,6 +85,6 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(csv_file):
     assert run.cores == 2
     assert run.frequency == 1.5
     assert run.gflops == 30.0
-    assert run.flop == 30.0e+8
+    assert run.flop == 30.0e8
     assert run.energy_used_joules == 10.0
     assert run.gflops_per_watt == 3.0

@@ -10,7 +10,7 @@ CSV_HEADERS = "cpu,cores,frequency,gflops,gflop,energy_used,gflops_per_watt,star
 
 
 class CsvRunRepository(BenchmarkRunRepositoryInterface):
-    date_time_format = '%Y-%m-%d %H:%M:%S'
+    date_time_format = "%Y-%m-%d %H:%M:%S"
 
     def get_all(self) -> list[Run]:
         # make datetime parse 2023-04-27 16:00:36.435748
@@ -19,16 +19,25 @@ class CsvRunRepository(BenchmarkRunRepositoryInterface):
             runs = []
             for row in rows[1:]:
                 run = Run()
-                cpu, cores, thread_per_core, frequency, gflops, gflop, energy_used, gflops_per_watt, start_time, end_time = row.split(
-                    ","
-                )
+                (
+                    cpu,
+                    cores,
+                    thread_per_core,
+                    frequency,
+                    gflops,
+                    gflop,
+                    energy_used,
+                    gflops_per_watt,
+                    start_time,
+                    end_time,
+                ) = row.split(",")
 
                 run.cpu = cpu
                 run.cores = int(cores)
                 run.threads_per_core = int(thread_per_core)
                 run.frequency = float(frequency)
                 run.gflops = float(gflops)
-                run.flop = float(gflop) * 1.0e+8
+                run.flop = float(gflop) * 1.0e8
                 run._energy_used_joules = float(energy_used)
                 run._gflops_per_watt = float(gflops_per_watt)
                 runs.append(run)
@@ -36,7 +45,7 @@ class CsvRunRepository(BenchmarkRunRepositoryInterface):
 
     def save(self, run: Run) -> None:
         with open(self.path, "a") as f:
-            gflop = run.flop / 1.0e+8
+            gflop = run.flop / 1.0e8
             f.write(
                 f"{run.cpu},{run.cores},{run.threads_per_core},{run.frequency},{run.gflops},{gflop},{run.energy_used_joules},{run.gflops_per_watt},{run.start_time},{run.end_time}\n"
             )

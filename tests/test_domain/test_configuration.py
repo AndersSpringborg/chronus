@@ -19,7 +19,6 @@ def test_configuration_2_cores_1_frequency():
     # arrange
     info = CpuInfo(name="cpu", cores=2, frequencies=[1.0])
 
-
     # act
     configurations = Configurations(info)
 
@@ -51,6 +50,7 @@ def test_configuration_2_cores_2_frequency():
 
     assert configurations[3].cores == 2
     assert configurations[3].frequency == 4.0
+
 
 def test_configuration_with_2_threads_per_core_makes_configuration_for_running_1_thread_and_2_threads():
     info = CpuInfo(name="cpu", cores=1, frequencies=[1.0], threads_per_core=2)

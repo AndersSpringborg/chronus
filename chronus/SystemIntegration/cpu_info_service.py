@@ -66,7 +66,7 @@ class LsCpuInfoService(CpuInfoServiceInterface):
         self.logger.debug(f"Found {cores.group(1)} CPU cores")
         return int(cores.group(1))
 
-    def _get_threads_per_core(self, stdout:str) -> int:
+    def _get_threads_per_core(self, stdout: str) -> int:
         threads_per_core = re.search(r"Thread\(s\) per core:\s+(\d+)", stdout)
 
         if threads_per_core is None:

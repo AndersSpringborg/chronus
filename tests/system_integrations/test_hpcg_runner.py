@@ -6,7 +6,6 @@ from chronus.SystemIntegration.hpcg import HpcgService
 from tests.test_domain.fixtures import mock_subprocess_run
 
 
-
 @pytest.fixture
 def make_file(tmpdir):
     def factory(file_name: str, content: str):
@@ -148,9 +147,7 @@ def test_hpcg_is_running_is_when_scontrol_running(hpcg_service_factory, mock_sub
     )
 
 
-def test_hpcg_is_not_running_when_scontrol_completed(
-    hpcg_service_factory, mock_subprocess_run
-):
+def test_hpcg_is_not_running_when_scontrol_completed(hpcg_service_factory, mock_subprocess_run):
     # Arrange
     app_runner = hpcg_service_factory()
     app_runner.prepare()
@@ -197,6 +194,7 @@ def test_hpcg_is_getting_the_job_id_from_scontrol(hpcg_service_factory, mock_sub
         ["scontrol", "show", "job", str(job_id)], stdout=subprocess.PIPE
     )
 
+
 def test_cores_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
     # Arrange
     app_runner = hpcg_service_factory()
@@ -209,6 +207,7 @@ def test_cores_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
     content = tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").read()
 
     assert "#SBATCH --ntasks=5" in content
+
 
 def test_frequency_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
     # Arrange
@@ -223,6 +222,7 @@ def test_frequency_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
 
     assert "#SBATCH --cpu-freq=200000" in content
 
+
 def test_thread_per_core_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
     # Arrange
     app_runner = hpcg_service_factory()
@@ -234,8 +234,6 @@ def test_thread_per_core_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
     # Assert
     content = tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").readlines()
     last_line = content[-1]
-
-
 
     assert "--ntasks-per-core=5" in last_line
 
@@ -290,13 +288,14 @@ def test_parse_gflops(gflops, hpcg_service_factory, mock_subprocess_run, make_fi
     # Assert
     assert gflops_from_app_runner == gflops
 
+
 @pytest.mark.parametrize(
     ("results,in_floats"),
     [
         ("1.36952e+08", 136952000.0),
         ("1.0e+08", 100000000.0),
         ("2.0e+02", 200.0),
-    ]
+    ],
 )
 def test_parse_results(results, in_floats, hpcg_service_factory, mock_subprocess_run, make_file):
     # Arrange
@@ -330,9 +329,7 @@ def test_files_are_deleted_after_is_running_is_returning_false(
     assert not tmpdir.join("hpcg_benchmark_output").isdir()
 
 
-def test_if_dir_exists_throw_error(
-    hpcg_service_factory, tmpdir, mock_subprocess_run, make_file
-):
+def test_if_dir_exists_throw_error(hpcg_service_factory, tmpdir, mock_subprocess_run, make_file):
     # Arrange
     app_runner = hpcg_service_factory()
     app_runner.prepare()
