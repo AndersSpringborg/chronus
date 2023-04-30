@@ -111,3 +111,5 @@ def test_get_threads_per_core(mock_system_calls):
 
     # Assert
     assert info.threads_per_core == expected_threads_per_core
+
+

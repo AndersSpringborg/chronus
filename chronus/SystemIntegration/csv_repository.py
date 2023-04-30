@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from chronus.domain.interfaces.benchmark_run_repository_interface import (
     BenchmarkRunRepositoryInterface,
@@ -9,6 +10,38 @@ CSV_HEADERS = "cpu,cores,frequency,gflops,gflop,energy_used,gflops_per_watt,star
 
 
 class CsvRunRepository(BenchmarkRunRepositoryInterface):
+    date_time_format = '%Y-%m-%d %H:%M:%S'
+
+    def get_all(self) -> list[Run]:
+        # make datetime parse 2023-04-27 16:00:36.435748
+        with open(self.path, "r") as f:
+            rows = f.readlines()
+            runs = []
+            for row in rows[1:]:
+                run = Run()
+                cpu, cores, thread_per_core, frequency, gflops, gflop, energy_used, gflops_per_watt, start_time, end_time = row.split(
+                    ","
+                )
+
+                run.cpu = cpu
+                run.cores = int(cores)
+                run.threads_per_core = int(thread_per_core)
+                run.frequency = float(frequency)
+                run.gflops = float(gflops)
+                run.flop = float(gflop) * 1.0e+8
+                run._energy_used_joules = float(energy_used)
+                run._gflops_per_watt = float(gflops_per_watt)
+                runs.append(run)
+        return runs
+
+    def save(self, run: Run) -> None:
+        with open(self.path, "a") as f:
+            gflop = run.flop / 1.0e+8
+            f.write(
+                f"{run.cpu},{run.cores},{run.threads_per_core},{run.frequency},{run.gflops},{gflop},{run.energy_used_joules},{run.gflops_per_watt},{run.start_time},{run.end_time}\n"
+            )
+        self.logger.info(f"Run data has been saved to {self.path}.")
+
     def __init__(self, path: str):
         self.logger = logging.getLogger(__name__)
         self.path = path
@@ -28,14 +61,6 @@ class CsvRunRepository(BenchmarkRunRepositoryInterface):
         with open(self.path, "x") as f:
             f.write(CSV_HEADERS)
         self.logger.info(f"File {self.path} has been created.")
-
-    def save(self, run: Run) -> None:
-        with open(self.path, "a") as f:
-            gflop = run.flop / 1.0e+8
-            f.write(
-                f"{run.cpu},{run.cores},{run.frequency},{run.gflops},{gflop},{run.energy_used_joules},{run.gflops_per_watt},{run.start_time},{run.end_time}\n"
-            )
-        self.logger.info(f"Run data has been saved to {self.path}.")
 
     def _backup_file(self):
         import os
