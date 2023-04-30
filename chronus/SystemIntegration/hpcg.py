@@ -36,8 +36,8 @@ class HpcgService(ApplicationRunnerInterface):
         self._prepare_hpcg_dat_file()
         self.logger.info("Prepared HPCG Service")
 
-    def run(self, cores: int = 1, frequency: int = 1_500_000):
-        slurm_file_content = self._generate_slurm_file_content(cores, frequency)
+    def run(self, cores: int = 1, frequency: int = 1_500_000, thread_per_core=1):
+        slurm_file_content = self._generate_slurm_file_content(cores, frequency, thread_per_core)
 
         with open(
             self._output_dir + "hpcg_benchmark_output/HPCG_BENCHMARK.slurm", "w"
@@ -92,7 +92,7 @@ class HpcgService(ApplicationRunnerInterface):
         os.system(f"rm -rf {self._output_dir}hpcg_benchmark_output")
         self.logger.info("HPCG Service cleaned up")
 
-    def _generate_slurm_file_content(self, cores, frequency) -> str:
+    def _generate_slurm_file_content(self, cores, frequency, thread_per_core) -> str:
         return f"""#!/bin/bash
 #SBATCH --job-name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
@@ -101,7 +101,7 @@ class HpcgService(ApplicationRunnerInterface):
 #SBATCH --ntasks={cores}
 #SBATCH --cpu-freq={frequency}
 
-srun --mpi=pmix_v4 --ntasks-per-core=2 {self._hpcg_path}"""
+srun --mpi=pmix_v4 --ntasks-per-core={thread_per_core} {self._hpcg_path}"""
 
     def _parse_gflops(self, output: str) -> float:
         gflops_parser = re.compile(r"GFLOP/s rating of=(?P<gflops>\d+\.\d+)")

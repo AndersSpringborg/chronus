@@ -95,7 +95,7 @@ def test_hpcg_slurm_file_contains_correct_content(hpcg_service_factory, tmpdir):
     app_runner.prepare()
 
     # Act
-    app_runner.run(cores=10, frequency=1_500_000)
+    app_runner.run(cores=10, thread_per_core=2, frequency=1_500_000)
 
     # Assert
 
@@ -196,6 +196,48 @@ def test_hpcg_is_getting_the_job_id_from_scontrol(hpcg_service_factory, mock_sub
     mocked_subprocess_run.assert_called_with(
         ["scontrol", "show", "job", str(job_id)], stdout=subprocess.PIPE
     )
+
+def test_cores_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+
+    # Act
+    app_runner.run(cores=5, frequency=1_500_000)
+
+    # Assert
+    content = tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").read()
+
+    assert "#SBATCH --ntasks=5" in content
+
+def test_frequency_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+
+    # Act
+    app_runner.run(cores=5, frequency=2_000_000)
+
+    # Assert
+    content = tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").read()
+
+    assert "#SBATCH --cpu-freq=200000" in content
+
+def test_thread_per_core_in_slurm_file_is_correct(hpcg_service_factory, tmpdir):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+
+    # Act
+    app_runner.run(cores=5, thread_per_core=5, frequency=1_500_000)
+
+    # Assert
+    content = tmpdir.join("hpcg_benchmark_output/HPCG_BENCHMARK.slurm").readlines()
+    last_line = content[-1]
+
+
+
+    assert "--ntasks-per-core=5" in last_line
 
 
 def test_hpcg_gives_correct_result_when_scontrol_completed(
