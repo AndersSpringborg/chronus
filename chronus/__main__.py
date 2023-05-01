@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from enum import Enum
 from random import choice
 from time import sleep
@@ -10,7 +11,6 @@ from rich.logging import RichHandler
 from rich.pretty import pprint
 
 from chronus import version
-from chronus.cli import fake_data, plot_energy
 from chronus.domain.benchmark_service import BenchmarkService
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.csv_repository import CsvRunRepository
@@ -80,29 +80,6 @@ class StandardConfig:
         return self._color
 
 
-class Suite:
-    config: Config = StandardConfig()
-    hpcg: HpcgService
-    _repository: Repository
-
-    def __init__(self, path: str, repository: Repository):
-        self.hpcg = HpcgService.with_path(path)
-        self._path = path
-        self._repository = repository
-
-    def run(self) -> None:
-        """Run the suite."""
-        for conf in self.config:
-            run = self.hpcg.run()
-            logging.info(f"GFLOPS: {run.gflops}")
-            self._repository.save(run)
-            self.cooldown()
-
-    def cooldown(self):
-        logging.info("Cooling down...")
-        sleep(1)
-
-
 FORMAT = "%(message)s"
 logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()])
 
@@ -120,25 +97,21 @@ def main(
 ) -> None:
     pass
 
-
-@app.command(name="plot")
-def plot():
-    plot_energy()
-
-
-@app.command(name="solver")
-def solver():
-    data = fake_data()
-
-    best_config = config_model(data)
-
-    pprint(best_config)
 @app.command(name="init-model")
 def init_model(
     model_path: str = typer.Argument(..., help="The path to the model directory."),
     data_path: str = typer.Argument(..., help="The path to the data directory."),
 ):
-    runs = FileRepository(data_path)
+    abs_model_path = os.path.abspath(model_path)
+    abs_data_path = os.path.abspath(data_path)
+    model_service = ModelService(
+        model_repository=ModelRepository(abs_model_path),
+        data_repository=DataRepository(abs_data_path),
+        model_implementations=LinearRegression(),
+    )
+    model = model_service.init_model()
+    model_service.save_model(model)
+    logging.info("Model saved.")
 
 
 @app.command(name="slurm-config")
@@ -180,7 +153,6 @@ def benchmark(
 ):
     if debug:
         logging.getLogger().setLevel(logging.DEBUG)
-    import os
 
     full_path = os.path.abspath(hpcg_path)
     called_from_dir = os.getcwd()
