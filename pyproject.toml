@@ -39,6 +39,7 @@ rich = "^12.6.0"
 scikit-learn = "^1.2.1"
 matplotlib = "^3.7.1"
 dataclasses-json = "^0.5.7"
+pyghmi = "^1.5.61"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.5"

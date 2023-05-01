@@ -20,7 +20,6 @@ from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
 from chronus.SystemIntegration.repository import Repository
 
-name_as_grad = "^[[38;2;244;59;71mc^[[39m^[[38;2;215;59;84mh^[[39m^[[38;2;186;59;97mr^[[39m^[[38;2;157;59;110mo^[[39m^[[38;2;127;58;122mn^[[39m^[[38;2;98;58;135mu^[[39m^[[38;2;69;58;148ms^[[39m"
 name = "chronus"
 
 
@@ -38,7 +37,7 @@ logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichH
 
 
 app = typer.Typer(
-    name="chronus",
+    name=name,
     help="A energy scheduling model, build for HPC.",
     add_completion=True,
 )
@@ -47,8 +46,10 @@ console = Console()
 
 def version_callback(print_version: bool) -> None:
     """Print the version of the package."""
+    version_string = "\x1B[38;2;63;81;177mc\x1B[39m\x1B[38;2;90;85;174mh\x1B[39m\x1B[38;2;123;95;172mr\x1B[39m\x1B[38;2;133;101;173mo\x1B[39m\x1B[38;2;143;106;174mn\x1B[39m\x1B[38;2;156;106;169mu\x1B[39m\x1B[38;2;168;106;164ms\x1B[39m \x1B[38;2;186;107;153mv\x1B[39m\x1B[38;2;204;107;142me\x1B[39m\x1B[38;2;223;119;128mr\x1B[39m\x1B[38;2;241;130;113ms\x1B[39m\x1B[38;2;242;147;109mi\x1B[39m\x1B[38;2;243;164;105mo\x1B[39m\x1B[38;2;245;183;113mn\x1B[39m\x1B[38;2;247;201;120m:\x1B[39m "
+
     if print_version:
-        console.print(f"[yellow]chronus[/] version: [bold blue]{version}[/]")
+        print(version_string + "\x1B[38;2;247;201;120m" + version + "\x1B[39m")
         raise typer.Exit()
 
 
@@ -108,16 +109,8 @@ FORMAT = "%(message)s"
 logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()])
 
 
-@app.command(name="")
+@app.callback()
 def main(
-    path: str = typer.Option(
-        None,
-        "-p",
-        "--hpcg-path",
-        "--xhpcg-path",
-        case_sensitive=False,
-        help="The path to hpcg or xhpcg binary.",
-    ),
     print_version: bool = typer.Option(
         None,
         "-v",
@@ -127,10 +120,7 @@ def main(
         help="Prints the version of the chronus package.",
     ),
 ) -> None:
-    console.print(f"{name}")
-    """Run a suite of tests on a HPCG installation."""
-    suite = Suite(path, FileRepository("../out/chronus_run_save.json"))
-    suite.run()
+    pass
 
 
 @app.command(name="plot")
