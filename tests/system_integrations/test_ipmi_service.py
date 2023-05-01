@@ -1,3 +1,5 @@
+from unittest.mock import call
+
 import pytest
 from pyghmi.ipmi.sdr import SensorReading
 
@@ -7,16 +9,21 @@ from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
 
 @pytest.fixture
 def mock_ipmi(mocker):
-    mocker.patch("pyghmi.ipmi.command.Command.get_sensor_data", return_value=get_sensor_data)
+    mocker.patch("pyghmi.ipmi.private.localsession.Session")
+    mocker.patch("pyghmi.ipmi.command.Command.get_sensor_reading", return_value=get_sensor_data)
 
     def mock_reading(sensor_reading: SensorReading):
-        mocker.patch("pyghmi.ipmi.command.Command.get_sensor_reading", return_value=sensor_reading)
+        return mocker.patch(
+            "pyghmi.ipmi.command.Command.get_sensor_reading", return_value=sensor_reading
+        )
 
     return mock_reading
 
 
 def test_returns_system_sample(mock_ipmi):
     # Arrange
+    random_sample = get_sensor_data[0]
+    mock_ipmi(random_sample)
     ipmi = IpmiSystemService()
 
     # Act
@@ -29,7 +36,7 @@ def test_returns_system_sample(mock_ipmi):
 
 def test_gets_power_draw(mock_ipmi):
     # Arrange
-    mock_ipmi(
+    mock = mock_ipmi(
         SensorReading(
             {
                 "name": "System Level",
@@ -50,7 +57,36 @@ def test_gets_power_draw(mock_ipmi):
     sample = ipmi.sample()
 
     # Assert
+    print(mock.call_args_list)
+    assert call("Total_Power") in mock.call_args_list
     assert sample.current_power_draw == 20.0
+
+
+def test_gets_cpu_temp(mock_ipmi):
+    # Arrange
+    mock = mock_ipmi(
+        SensorReading(
+            {
+                "name": "CPU_Temp",
+                "type": "Temperature",
+                "id": 3,
+                "value": 54.0,
+                "imprecision": 1.5,
+                "states": [],
+                "state_ids": [],
+                "health": 0,
+            },
+            "°C",
+        )
+    )
+    ipmi = IpmiSystemService()
+
+    # Act
+    sample = ipmi.sample()
+
+    # Assert
+    assert call("CPU_Temp") in mock.call_args_list
+    assert sample.cpu_temp == 54.0
 
 
 get_sensor_data = [
