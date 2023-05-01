@@ -6,7 +6,7 @@ from chronus.domain.system_sample import SystemSample
 from chronus.SystemIntegration.csv_repository import CsvRunRepository
 from tests.fixtures import datetime_from_string
 
-HEADERS = "cpu,cores,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"
+HEADERS = "cpu,cores,thread_per_core,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"
 
 
 @pytest.fixture
@@ -84,6 +84,7 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(csv_file):
     assert run.cpu == "test"
     assert run.cores == 2
     assert run.frequency == 1.5
+    assert run.threads_per_core == 1
     assert run.gflops == 30.0
     assert run.flop == 30.0e8
     assert run.energy_used_joules == 10.0
