@@ -12,13 +12,10 @@ from rich.pretty import pprint
 from chronus import version
 from chronus.cli import fake_data, plot_energy
 from chronus.domain.benchmark_service import BenchmarkService
-from chronus.model.svm import config_model
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.csv_repository import CsvRunRepository
-from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
-from chronus.SystemIntegration.repository import Repository
 from chronus.SystemIntegration.sqlite_repository import SqliteRepository
 
 name = "chronus"
@@ -136,6 +133,12 @@ def solver():
     best_config = config_model(data)
 
     pprint(best_config)
+@app.command(name="init-model")
+def init_model(
+    model_path: str = typer.Argument(..., help="The path to the model directory."),
+    data_path: str = typer.Argument(..., help="The path to the data directory."),
+):
+    runs = FileRepository(data_path)
 
 
 @app.command(name="slurm-config")
@@ -151,8 +154,8 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
 # add partician compute
 
 
-@app.command(name="cpu")
-def debug(
+@app.command(name="benchmark")
+def benchmark(
     hpcg_path: str,
     print_version: bool = typer.Option(
         None,
@@ -181,14 +184,14 @@ def debug(
 
     full_path = os.path.abspath(hpcg_path)
     called_from_dir = os.getcwd()
-    benchmark = BenchmarkService(
+    benchmark_service = BenchmarkService(
         cpu_info_service=LsCpuInfoService(),
         application_runner=HpcgService(full_path),
         benchmark_repository=SqliteRepository(db_path),
         system_service=IpmiSystemService(),
     )
 
-    benchmark.run()
+    benchmark_service.run()
 
 
 # delete output dir if exception
