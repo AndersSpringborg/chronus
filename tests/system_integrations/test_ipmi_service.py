@@ -88,6 +88,31 @@ def test_gets_cpu_temp(mock_ipmi):
     assert call("CPU_Temp") in mock.call_args_list
     assert sample.cpu_temp == 54.0
 
+def test_gets_cpu_power(mock_ipmi):
+    # Arrange
+    mock = mock_ipmi(
+        SensorReading(
+            {
+                "name": "CPU1 Power",
+                "type": "Power",
+                "id": 3,
+                "value": 54.0,
+                "imprecision": 1.5,
+                "states": [],
+                "state_ids": [],
+                "health": 0,
+            },
+            "W",
+        )
+    )
+    ipmi = IpmiSystemService()
+
+    # Act
+    sample = ipmi.sample()
+
+    # Assert
+    assert call("CPU1 Power") in mock.call_args_list
+    assert sample.cpu_power == 54.0
 
 get_sensor_data = [
     SensorReading(
