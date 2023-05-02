@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 from dataclasses_json import dataclass_json
 
-from chronus.domain.benchmark import Benchmark
 from chronus.domain.system_sample import SystemSample
 
 
@@ -19,7 +18,7 @@ class Run:
     flop: float = 0.0
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
-    benchmark: Benchmark = None
+    benchmark_id: int = None
 
     def __post_init__(self):
         self._samples = []
@@ -34,6 +33,8 @@ class Run:
         return self._gflops_per_watt
 
     def _average_power_draw(self) -> float:
+        if len(self._samples) == 0:
+            return 1.0
         return sum([sample.current_power_draw for sample in self._samples]) / len(self._samples)
 
     def finish(self, end_time: datetime.datetime = None):

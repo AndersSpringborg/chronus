@@ -78,7 +78,7 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(csv_file):
 
     # Act
     repo.save_run(initial_run)
-    run = repo.get_all()[0]
+    run = repo.get_all_runs()[0]
 
     # Assert
     assert run.cpu == "test"

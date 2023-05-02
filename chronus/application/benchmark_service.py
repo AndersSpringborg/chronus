@@ -46,11 +46,11 @@ class BenchmarkService:
                 f"Starting benchmark for {cpu.name} with {configuration.cores} cores and {configuration.frequency / 1.0e6} GHz"
             )
             run = Run(
-                benchmark=benchmark,
                 cpu=cpu.name,
                 cores=configuration.cores,
                 frequency=configuration.frequency,
                 threads_per_core=configuration.threads_per_core,
+                benchmark_id=benchmark.id
             )
             self.application_runner.prepare()
             self.application_runner.run(configuration.cores, configuration.frequency)

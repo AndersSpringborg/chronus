@@ -159,7 +159,7 @@ def test_run_have_benchmark_id():
 
     # Assert
     run = repository.runs[0]
-    assert run.benchmark == benchmark
+    assert run.benchmark_id == benchmark.id
 
 
 def test_benchmark_have_result_after_run():

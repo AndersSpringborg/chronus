@@ -6,8 +6,11 @@ class RepositoryInterface:
     def save_run(self, run: Run) -> None:
         pass
 
-    def get_all(self) -> list[Run]:
+    def get_all_runs(self) -> list[Run]:
         pass
 
-    def save_benchmark(self, benchmark: Benchmark) -> None:
+    def save_benchmark(self, benchmark: Benchmark) -> Benchmark:
+        pass
+
+    def get_all_benchmarks(self) -> list[Benchmark]:
         pass
