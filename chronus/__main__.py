@@ -11,10 +11,12 @@ from rich.logging import RichHandler
 from chronus import version
 from chronus.application.benchmark_service import BenchmarkService
 from chronus.application.model_service import ModelService
-from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
-from chronus.SystemIntegration.system_service_interfaces.ipmi_system_service import IpmiSystemService
+from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
+from chronus.SystemIntegration.system_service_interfaces.ipmi_system_service import (
+    IpmiSystemService,
+)
 
 name = "chronus"
 

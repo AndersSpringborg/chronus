@@ -1,9 +1,7 @@
 import logging
 import sqlite3
 
-from chronus.domain.interfaces.repository_interface import (
-    RepositoryInterface,
-)
+from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 from tests.fixtures import datetime_from_string
@@ -128,7 +126,13 @@ class SqliteRepository(RepositoryInterface):
             for sample in run._samples:
                 cursor.execute(
                     INSERT_SYSTEM_SAMPLE_QUERY,
-                    (run_id, sample.timestamp, sample.current_power_draw, sample.cpu_power, sample.cpu_temp),
+                    (
+                        run_id,
+                        sample.timestamp,
+                        sample.current_power_draw,
+                        sample.cpu_power,
+                        sample.cpu_temp,
+                    ),
                 )
             conn.commit()
         self.logger.info(f"Run data has been saved to {self.path}.")
@@ -147,7 +151,10 @@ class SqliteRepository(RepositoryInterface):
             for row in cursor.execute(GET_ALL_SYSTEM_SAMPLES_QUERY, (run_id,)):
                 _, _, timestamp, current_power_draw, cpu_power, cpu_temp = row
                 sample = SystemSample(
-                    timestamp=datetime_from_string(timestamp), current_power_draw=current_power_draw, cpu_power=cpu_power, cpu_temp=cpu_temp
+                    timestamp=datetime_from_string(timestamp),
+                    current_power_draw=current_power_draw,
+                    cpu_power=cpu_power,
+                    cpu_temp=cpu_temp,
                 )
                 samples.append(sample)
         return samples

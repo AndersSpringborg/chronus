@@ -127,16 +127,13 @@ def test_sample_have_correct_data(sqlite_db):
     assert saved_samples[0].timestamp == datetime_from_string("2020-01-01 00:00:1")
     assert saved_samples[1].timestamp == datetime_from_string("2020-01-01 00:00:2")
 
+
 def test_sample_have_cpu_temps(sqlite_db):
     # Arrange
     repo = SqliteRepository(sqlite_db)
     run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
-    sample1 = SystemSample(
-        timestamp=datetime_from_string("2020-01-01 00:00:1"), cpu_temp=50.0
-    )
-    sample2 = SystemSample(
-        timestamp=datetime_from_string("2020-01-01 00:00:2"), cpu_temp=60.0
-    )
+    sample1 = SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:1"), cpu_temp=50.0)
+    sample2 = SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:2"), cpu_temp=60.0)
     run.add_sample(sample1)
     run.add_sample(sample2)
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
@@ -150,16 +147,13 @@ def test_sample_have_cpu_temps(sqlite_db):
     assert saved_samples[0].cpu_temp == 50.0
     assert saved_samples[1].cpu_temp == 60.0
 
+
 def test_sample_have_cpu_power(sqlite_db):
     # Arrange
     repo = SqliteRepository(sqlite_db)
     run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
-    sample1 = SystemSample(
-        timestamp=datetime_from_string("2020-01-01 00:00:1"), cpu_power=50.0
-    )
-    sample2 = SystemSample(
-        timestamp=datetime_from_string("2020-01-01 00:00:2"), cpu_power=60.0
-    )
+    sample1 = SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:1"), cpu_power=50.0)
+    sample2 = SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:2"), cpu_power=60.0)
     run.add_sample(sample1)
     run.add_sample(sample2)
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
@@ -172,4 +166,3 @@ def test_sample_have_cpu_power(sqlite_db):
     # Assert
     assert saved_samples[0].cpu_power == 50.0
     assert saved_samples[1].cpu_power == 60.0
-

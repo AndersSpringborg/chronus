@@ -1,8 +1,6 @@
 import logging
 
-from chronus.domain.interfaces.repository_interface import (
-    RepositoryInterface,
-)
+from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.Run import Run
 
 CSV_HEADERS = "cpu,cores,thread_per_core,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"

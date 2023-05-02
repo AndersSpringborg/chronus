@@ -3,10 +3,8 @@ import time
 
 from chronus.domain.configuration import Configurations
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
-from chronus.domain.interfaces.repository_interface import (
-    RepositoryInterface,
-)
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
+from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
 from chronus.domain.Run import Run
 
