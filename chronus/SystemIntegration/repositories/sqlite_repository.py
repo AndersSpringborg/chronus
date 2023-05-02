@@ -91,7 +91,6 @@ GET_ALL_SYSTEM_SAMPLES_QUERY = "SELECT * FROM system_samples WHERE run_id = ?;"
 
 
 class SqliteRepository(RepositoryInterface):
-
     def save_benchmark(self, benchmark: Benchmark) -> int:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
@@ -128,6 +127,7 @@ class SqliteRepository(RepositoryInterface):
                 benchmark.runs = self.get_all_runs(benchmark_id)
                 benchmarks.append(benchmark)
         return benchmarks
+
     def __init__(self, path: str):
         self.logger = logging.getLogger(__name__)
         self.path = path
@@ -171,9 +171,6 @@ class SqliteRepository(RepositoryInterface):
                 runs.append(run)
         return runs
 
-
-
-
     def save_run(self, run: Run) -> None:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
@@ -216,7 +213,9 @@ class SqliteRepository(RepositoryInterface):
             cursor.execute(CREATE_BENCHMARKS_TABLE_QUERY)
             cursor.execute(CREATE_RUNS_TABLE_QUERY)
             cursor.execute(CREATE_SYSTEM_SAMPLES_TABLE_QUERY)
-        self.logger.info(f"Tables 'benchmarks', 'runs', and 'system_samples' have been created in {self.path}.")
+        self.logger.info(
+            f"Tables 'benchmarks', 'runs', and 'system_samples' have been created in {self.path}."
+        )
 
     def _get_system_samples(self, run_id: int) -> list[SystemSample]:
         samples = []

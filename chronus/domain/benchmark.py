@@ -1,8 +1,8 @@
 import datetime
 from dataclasses import dataclass
 
-from chronus.domain.Run import Run
 from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.Run import Run
 
 
 @dataclass

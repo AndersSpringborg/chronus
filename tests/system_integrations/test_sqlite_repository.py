@@ -1,9 +1,9 @@
 import freezegun
 import pytest
 
-from chronus.domain.Run import Run
 from chronus.domain.benchmark import Benchmark
 from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
 from tests.fixtures import datetime_from_string

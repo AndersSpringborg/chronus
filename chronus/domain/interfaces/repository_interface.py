@@ -1,5 +1,5 @@
-from chronus.domain.Run import Run
 from chronus.domain.benchmark import Benchmark
+from chronus.domain.Run import Run
 
 
 class RepositoryInterface:

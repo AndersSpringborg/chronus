@@ -50,7 +50,7 @@ class BenchmarkService:
                 cores=configuration.cores,
                 frequency=configuration.frequency,
                 threads_per_core=configuration.threads_per_core,
-                benchmark_id=benchmark.id
+                benchmark_id=benchmark.id,
             )
             self.application_runner.prepare()
             self.application_runner.run(configuration.cores, configuration.frequency)

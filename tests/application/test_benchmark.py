@@ -7,9 +7,9 @@ from freezegun import freeze_time
 
 from chronus.application.benchmark_service import BenchmarkService
 from chronus.domain.benchmark import Benchmark
+from chronus.domain.cpu_info import CpuInfo
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
-from chronus.domain.cpu_info import CpuInfo
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
 from chronus.domain.Run import Run
@@ -150,9 +150,7 @@ def test_run_have_benchmark_id():
     # Arrange
     benchmark = Benchmark(id=100, application="test", system_info=CpuInfo())
     repository = FakeBencmarkRepository(benchmark=benchmark)
-    benchmark_service = benchmark_fixture(
-        benchmark_repository=repository
-    )
+    benchmark_service = benchmark_fixture(benchmark_repository=repository)
 
     # Act
     benchmark_service.run()

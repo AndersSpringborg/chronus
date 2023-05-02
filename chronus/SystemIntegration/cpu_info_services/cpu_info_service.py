@@ -4,8 +4,8 @@ import logging
 import re
 import subprocess
 
-from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 
 
 class LsCpuInfoService(CpuInfoServiceInterface):
