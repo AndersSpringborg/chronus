@@ -34,7 +34,10 @@ class IpmiSystemService(SystemServiceInterface):
         cpu_power = self._get_cpu_power()
 
         return SystemSample(
-            datetime.datetime.now(), current_power_draw=current_power_draw, cpu_temp=cpu_temp, cpu_power=cpu_power
+            datetime.datetime.now(),
+            current_power_draw=current_power_draw,
+            cpu_temp=cpu_temp,
+            cpu_power=cpu_power,
         )
 
     def _get_system_power_draw(self) -> float:
@@ -53,6 +56,6 @@ class IpmiSystemService(SystemServiceInterface):
 
     def _get_cpu_power(self):
         # Get the sensor data
-        cpu_power_raw: SensorReading = self._conn.get_sensor_reading("CPU1 Power")
+        cpu_power_raw: SensorReading = self._conn.get_sensor_reading("CPU_Power")
 
         return cpu_power_raw.value
