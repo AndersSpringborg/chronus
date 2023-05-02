@@ -19,6 +19,7 @@ from chronus.SystemIntegration.FileRepository import FileRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
 from chronus.SystemIntegration.repository import Repository
+from chronus.SystemIntegration.sqlite_repository import SqliteRepository
 
 name = "chronus"
 
@@ -167,7 +168,12 @@ def debug(
         "--debug",
         help="Print debug information.",
     ),
-    csv_path: str = "runs.csv",
+    db_path: str = typer.Option(
+        "data.db",
+        "-db",
+        "--database",
+        help="The path to the database.",
+    ),
 ):
     if debug:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -178,7 +184,7 @@ def debug(
     benchmark = BenchmarkService(
         cpu_info_service=LsCpuInfoService(),
         application_runner=HpcgService(full_path),
-        benchmark_repository=CsvRunRepository(called_from_dir + "/" + csv_path),
+        benchmark_repository=SqliteRepository(db_path),
         system_service=IpmiSystemService(),
     )
 

@@ -41,7 +41,7 @@ class BenchmarkService:
         configurations = Configurations(cpu)
         for configuration in configurations:
             self.logger.info(
-                f"Starting benchmark for {cpu.name} with {configuration.cores} cores and {configuration.frequency / 1.0e8} GHz"
+                f"Starting benchmark for {cpu.name} with {configuration.cores} cores and {configuration.frequency / 1.0e6} GHz"
             )
             run = Run(
                 cpu=cpu.name,
