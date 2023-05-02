@@ -8,12 +8,11 @@ from time import sleep
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
-from rich.pretty import pprint
 
 from chronus import version
 from chronus.domain.benchmark_service import BenchmarkService
+from chronus.domain.model_service import ModelService
 from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
-from chronus.SystemIntegration.csv_repository import CsvRunRepository
 from chronus.SystemIntegration.hpcg import HpcgService
 from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
 from chronus.SystemIntegration.sqlite_repository import SqliteRepository
@@ -44,7 +43,13 @@ console = Console()
 
 def version_callback(print_version: bool) -> None:
     """Print the version of the package."""
-    version_string = "\x1B[38;2;63;81;177mc\x1B[39m\x1B[38;2;90;85;174mh\x1B[39m\x1B[38;2;123;95;172mr\x1B[39m\x1B[38;2;133;101;173mo\x1B[39m\x1B[38;2;143;106;174mn\x1B[39m\x1B[38;2;156;106;169mu\x1B[39m\x1B[38;2;168;106;164ms\x1B[39m \x1B[38;2;186;107;153mv\x1B[39m\x1B[38;2;204;107;142me\x1B[39m\x1B[38;2;223;119;128mr\x1B[39m\x1B[38;2;241;130;113ms\x1B[39m\x1B[38;2;242;147;109mi\x1B[39m\x1B[38;2;243;164;105mo\x1B[39m\x1B[38;2;245;183;113mn\x1B[39m\x1B[38;2;247;201;120m:\x1B[39m "
+    version_string = (
+        "\x1B[38;2;63;81;177mc\x1B[39m\x1B[38;2;90;85;174mh\x1B[39m\x1B[38;2;123;95;172mr\x1B[39m\x1B["
+        "38;2;133;101;173mo\x1B[39m\x1B[38;2;143;106;174mn\x1B[39m\x1B[38;2;156;106;169mu\x1B[39m\x1B["
+        "38;2;168;106;164ms\x1B[39m \x1B[38;2;186;107;153mv\x1B[39m\x1B[38;2;204;107;142me\x1B[39m\x1B["
+        "38;2;223;119;128mr\x1B[39m\x1B[38;2;241;130;113ms\x1B[39m\x1B[38;2;242;147;109mi\x1B[39m\x1B["
+        "38;2;243;164;105mo\x1B[39m\x1B[38;2;245;183;113mn\x1B[39m\x1B[38;2;247;201;120m:\x1B[39m"
+    )
 
     if print_version:
         print(version_string + "\x1B[38;2;247;201;120m" + version + "\x1B[39m")
@@ -96,6 +101,7 @@ def main(
     ),
 ) -> None:
     pass
+
 
 @app.command(name="init-model")
 def init_model(
