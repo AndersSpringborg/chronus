@@ -3,8 +3,8 @@ import time
 
 from chronus.domain.configuration import Configurations
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
-from chronus.domain.interfaces.benchmark_run_repository_interface import (
-    BenchmarkRunRepositoryInterface,
+from chronus.domain.interfaces.repository_interface import (
+    RepositoryInterface,
 )
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
@@ -17,7 +17,7 @@ class BenchmarkService:
     cpu_info_service: CpuInfoServiceInterface
     application_runner: ApplicationRunnerInterface
     system_service: SystemServiceInterface
-    run_repository: BenchmarkRunRepositoryInterface
+    run_repository: RepositoryInterface
     frequency = 20
 
     def __init__(
@@ -25,7 +25,7 @@ class BenchmarkService:
         cpu_info_service: CpuInfoServiceInterface,
         application_runner: ApplicationRunnerInterface,
         system_service: SystemServiceInterface,
-        benchmark_repository: BenchmarkRunRepositoryInterface,
+        benchmark_repository: RepositoryInterface,
     ):
         self.energy_used = 0.0
         self.cpu_info_service = cpu_info_service

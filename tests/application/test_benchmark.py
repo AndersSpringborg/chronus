@@ -7,8 +7,8 @@ from freezegun import freeze_time
 
 from chronus.application.benchmark_service import BenchmarkService
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
-from chronus.domain.interfaces.benchmark_run_repository_interface import (
-    BenchmarkRunRepositoryInterface,
+from chronus.domain.interfaces.repository_interface import (
+    RepositoryInterface,
 )
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo, CpuInfoServiceInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
@@ -63,7 +63,7 @@ class FakeApplication(ApplicationRunnerInterface):
         return is_running
 
 
-class FakeBencmarkRepository(BenchmarkRunRepositoryInterface):
+class FakeBencmarkRepository(RepositoryInterface):
     called = 0
     runs: list[Run]
 
@@ -97,7 +97,7 @@ def benchmark_fixture(
     cpu_info_service: CpuInfoServiceInterface = None,
     application: ApplicationRunnerInterface = None,
     system_service: SystemServiceInterface = None,
-    benchmark_repository: BenchmarkRunRepositoryInterface = None,
+    benchmark_repository: RepositoryInterface = None,
 ):
     if cpu_info_service is None:
         cpu_info_service = FakeCpuInfoService(cores=1, frequencies=[1.5])

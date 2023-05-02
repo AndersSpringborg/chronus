@@ -1,8 +1,8 @@
 import logging
 import sqlite3
 
-from chronus.domain.interfaces.benchmark_run_repository_interface import (
-    BenchmarkRunRepositoryInterface,
+from chronus.domain.interfaces.repository_interface import (
+    RepositoryInterface,
 )
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
@@ -63,7 +63,7 @@ GET_ALL_SYSTEM_SAMPLES_QUERY = "SELECT * FROM system_samples WHERE run_id = ?;"
 GET_ALL_RUNS_QUERY = "SELECT * FROM runs;"
 
 
-class SqliteRepository(BenchmarkRunRepositoryInterface):
+class SqliteRepository(RepositoryInterface):
     def __init__(self, path: str):
         self.logger = logging.getLogger(__name__)
         self.path = path

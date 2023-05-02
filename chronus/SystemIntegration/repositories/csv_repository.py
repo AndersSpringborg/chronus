@@ -1,14 +1,14 @@
 import logging
 
-from chronus.domain.interfaces.benchmark_run_repository_interface import (
-    BenchmarkRunRepositoryInterface,
+from chronus.domain.interfaces.repository_interface import (
+    RepositoryInterface,
 )
 from chronus.domain.Run import Run
 
 CSV_HEADERS = "cpu,cores,thread_per_core,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"
 
 
-class CsvRunRepository(BenchmarkRunRepositoryInterface):
+class CsvRunRepository(RepositoryInterface):
     date_time_format = "%Y-%m-%d %H:%M:%S"
 
     def get_all(self) -> list[Run]:

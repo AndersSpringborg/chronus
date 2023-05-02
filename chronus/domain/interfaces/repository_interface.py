@@ -1,7 +1,7 @@
 from chronus.domain.Run import Run
 
 
-class BenchmarkRunRepositoryInterface:
+class RepositoryInterface:
     def save(self, run: Run) -> None:
         pass
 
