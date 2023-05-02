@@ -40,7 +40,7 @@ class CsvRunRepository(RepositoryInterface):
                 runs.append(run)
         return runs
 
-    def save(self, run: Run) -> None:
+    def save_run(self, run: Run) -> None:
         with open(self.path, "a") as f:
             gflop = run.flop / 1.0e9
             f.write(

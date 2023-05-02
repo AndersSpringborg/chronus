@@ -103,7 +103,7 @@ class SqliteRepository(RepositoryInterface):
                 runs.append(run)
         return runs
 
-    def save(self, run: Run) -> None:
+    def save_run(self, run: Run) -> None:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             cursor.execute(

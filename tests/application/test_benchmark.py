@@ -6,8 +6,10 @@ import pytest
 from freezegun import freeze_time
 
 from chronus.application.benchmark_service import BenchmarkService
+from chronus.domain.benchmark import Benchmark
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
-from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo, CpuInfoServiceInterface
+from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
+from chronus.domain.cpu_info import CpuInfo
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
 from chronus.domain.Run import Run
@@ -37,6 +39,9 @@ class FakeSystemService(SystemServiceInterface):
 
 
 class FakeApplication(ApplicationRunnerInterface):
+    def run(self, cores: int, frequency: float, thread_per_core=1):
+        pass
+
     def __init__(self, seconds: int = None, result: float = None, gflops: float = None):
         self.seconds = seconds or 0
         self.__counter = 0
@@ -44,9 +49,6 @@ class FakeApplication(ApplicationRunnerInterface):
         self.result = result or 100.0
         self.cleanup_called = 0
         self.prepare_called = 0
-
-    def run(self, cores: int, frequency: float):
-        pass
 
     def prepare(self):
         self.prepare_called += 1
@@ -62,15 +64,27 @@ class FakeApplication(ApplicationRunnerInterface):
 
 
 class FakeBencmarkRepository(RepositoryInterface):
-    called = 0
+    called_save_run = 0
     runs: list[Run]
 
-    def __init__(self):
-        self.runs = []
+    called_save_benchmark = 0
+    benchmarks: list[Benchmark]
 
-    def save(self, run: Run) -> None:
-        self.called += 1
+    def __init__(self, benchmark: Benchmark = None):
+        self.runs = []
+        self.benchmarks = []
+        self._benchmark = benchmark
+
+    def save_run(self, run: Run) -> None:
+        self.called_save_run += 1
         self.runs.append(run)
+
+    def save_benchmark(self, benchmark: Benchmark) -> Benchmark:
+        self.called_save_benchmark += 1
+        self.benchmarks.append(benchmark)
+        if self._benchmark is not None:
+            return self._benchmark
+        return benchmark
 
 
 @pytest.fixture
@@ -132,6 +146,22 @@ def test_benchmark_have_speed_after_run():
     assert run.flop == gflops
 
 
+def test_run_have_benchmark_id():
+    # Arrange
+    benchmark = Benchmark(id=100, application="test", system_info=CpuInfo())
+    repository = FakeBencmarkRepository(benchmark=benchmark)
+    benchmark_service = benchmark_fixture(
+        benchmark_repository=repository
+    )
+
+    # Act
+    benchmark_service.run()
+
+    # Assert
+    run = repository.runs[0]
+    assert run.benchmark == benchmark
+
+
 def test_benchmark_have_result_after_run():
     operations_done = 100.0
     repository = FakeBencmarkRepository()
@@ -166,7 +196,7 @@ def test_benchmark_saved_after_each_configuration(skip_sleep):
         benchmark.run()
 
     # Assert
-    assert benchmark_run_repository.called == 2
+    assert benchmark_run_repository.called_save_run == 2
 
 
 def test_calls_cleanup_after_each_run(skip_sleep):
@@ -219,3 +249,18 @@ def test_benchmark_set_end_time_after_run_is_completed(skip_sleep):
     # Assert
     run = repository.runs[0]
     assert run.end_time == datetime_from_string("2021-01-01 00:00:00")
+
+
+def test_saves_benchmark_benchmark_model_on_every_run(skip_sleep):
+    # Arrange
+    repository = FakeBencmarkRepository()
+    benchmark = benchmark_fixture(
+        benchmark_repository=repository,
+    )
+
+    # Act
+    benchmark.run()
+
+    # Assert
+    assert repository.called_save_benchmark == 1
+    assert len(repository.benchmarks) == 1

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from dataclasses_json import dataclass_json
 
+from chronus.domain.benchmark import Benchmark
 from chronus.domain.system_sample import SystemSample
 
 
@@ -18,6 +19,7 @@ class Run:
     flop: float = 0.0
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
+    benchmark: Benchmark = None
 
     def __post_init__(self):
         self._samples = []

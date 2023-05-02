@@ -2,7 +2,7 @@ from typing import List
 
 from dataclasses import dataclass
 
-from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo
+from chronus.domain.cpu_info import CpuInfo
 
 
 @dataclass

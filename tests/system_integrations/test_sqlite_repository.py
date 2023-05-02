@@ -36,7 +36,7 @@ def test_save_run(sqlite_db):
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
 
     # Act
-    repo.save(run)
+    repo.save_run(run)
 
     # Assert
     run_saved = repo.get_all()[0]
@@ -66,7 +66,7 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(sqlite_db):
     )
 
     # Act
-    repo.save(initial_run)
+    repo.save_run(initial_run)
     run = repo.get_all()[0]
 
     # Assert
@@ -94,7 +94,7 @@ def test_save_run_with_system_samples(sqlite_db):
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
 
     # Act
-    repo.save(run)
+    repo.save_run(run)
     saved_run = repo.get_all()[0]
     saved_samples = saved_run._samples
 
@@ -115,7 +115,7 @@ def test_sample_have_correct_data(sqlite_db):
     run.add_sample(sample1)
     run.add_sample(sample2)
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
-    repo.save(run)
+    repo.save_run(run)
 
     # Act
     saved_run = repo.get_all()[0]
@@ -137,7 +137,7 @@ def test_sample_have_cpu_temps(sqlite_db):
     run.add_sample(sample1)
     run.add_sample(sample2)
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
-    repo.save(run)
+    repo.save_run(run)
 
     # Act
     saved_run = repo.get_all()[0]
@@ -157,7 +157,7 @@ def test_sample_have_cpu_power(sqlite_db):
     run.add_sample(sample1)
     run.add_sample(sample2)
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
-    repo.save(run)
+    repo.save_run(run)
 
     # Act
     saved_run = repo.get_all()[0]

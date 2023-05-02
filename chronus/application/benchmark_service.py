@@ -1,6 +1,7 @@
 import logging
 import time
 
+from chronus.domain.benchmark import Benchmark
 from chronus.domain.configuration import Configurations
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
@@ -15,7 +16,7 @@ class BenchmarkService:
     cpu_info_service: CpuInfoServiceInterface
     application_runner: ApplicationRunnerInterface
     system_service: SystemServiceInterface
-    run_repository: RepositoryInterface
+    repository: RepositoryInterface
     frequency = 20
 
     def __init__(
@@ -29,12 +30,15 @@ class BenchmarkService:
         self.cpu_info_service = cpu_info_service
         self.application_runner = application_runner
         self.system_service = system_service
-        self.run_repository = benchmark_repository
+        self.repository = benchmark_repository
         self.gflops = 0.0
         self.logger = logging.getLogger(__name__)
 
     def run(self):
         cpu = self.cpu_info_service.get_cpu_info()
+
+        benchmark = Benchmark(system_info=cpu, application="HPCG")
+        benchmark = self.repository.save_benchmark(benchmark)
 
         configurations = Configurations(cpu)
         for configuration in configurations:
@@ -42,6 +46,7 @@ class BenchmarkService:
                 f"Starting benchmark for {cpu.name} with {configuration.cores} cores and {configuration.frequency / 1.0e6} GHz"
             )
             run = Run(
+                benchmark=benchmark,
                 cpu=cpu.name,
                 cores=configuration.cores,
                 frequency=configuration.frequency,
@@ -59,8 +64,11 @@ class BenchmarkService:
             run.gflops = self.application_runner.gflops
             run.flop = self.application_runner.result
             self.application_runner.cleanup()
-            self.run_repository.save(run)
+            self.repository.save_run(run)
 
             self.logger.info(
                 f"Benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz complete, GFLOPS: {run.gflops}"
             )
+
+    def _save_benchmark(self, benchmark: Benchmark):
+        self.repository.save_benchmark(benchmark)

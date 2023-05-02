@@ -51,7 +51,7 @@ def test_save_run(csv_file):
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
 
     # Act
-    repo.save(run)
+    repo.save_run(run)
 
     # Assert
     # cpu=test, cores=2, thread_per_core=1, frequency=1.5, gflops=30.0, flop=30.0+8 energy_used=10.0, gflops_per_watt=3.0
@@ -77,7 +77,7 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(csv_file):
     )
 
     # Act
-    repo.save(initial_run)
+    repo.save_run(initial_run)
     run = repo.get_all()[0]
 
     # Assert
