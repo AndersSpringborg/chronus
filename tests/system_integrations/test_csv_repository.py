@@ -41,7 +41,7 @@ def test_if_file_exists_move_it_to_backup(csv_file):
 def test_save_run(csv_file):
     # Arrange
     repo = CsvRunRepository(csv_file)
-    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e8)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
     run.add_sample(
         SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:1"), current_power_draw=10.0)
     )
