@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS system_samples (
     run_id INTEGER,
     timestamp TEXT,
     current_power_draw REAL,
+    cpu_power REAL,
+    cpu_temp REAL,
     FOREIGN KEY(run_id) REFERENCES runs(id)
 );
 """
@@ -53,8 +55,10 @@ INSERT_SYSTEM_SAMPLE_QUERY = """
 INSERT INTO system_samples (
     run_id,
     timestamp,
-    current_power_draw
-) VALUES (?, ?, ?);
+    current_power_draw,
+    cpu_power,
+    cpu_temp
+) VALUES (?, ?, ?, ?, ?);
 """
 
 GET_ALL_SYSTEM_SAMPLES_QUERY = "SELECT * FROM system_samples WHERE run_id = ?;"
@@ -124,7 +128,7 @@ class SqliteRepository(RepositoryInterface):
             for sample in run._samples:
                 cursor.execute(
                     INSERT_SYSTEM_SAMPLE_QUERY,
-                    (run_id, sample.timestamp, sample.current_power_draw),
+                    (run_id, sample.timestamp, sample.current_power_draw, sample.cpu_power, sample.cpu_temp),
                 )
             conn.commit()
         self.logger.info(f"Run data has been saved to {self.path}.")
@@ -141,9 +145,9 @@ class SqliteRepository(RepositoryInterface):
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             for row in cursor.execute(GET_ALL_SYSTEM_SAMPLES_QUERY, (run_id,)):
-                _, _, timestamp, current_power_draw = row
+                _, _, timestamp, current_power_draw, cpu_power, cpu_temp = row
                 sample = SystemSample(
-                    timestamp=datetime_from_string(timestamp), current_power_draw=current_power_draw
+                    timestamp=datetime_from_string(timestamp), current_power_draw=current_power_draw, cpu_power=cpu_power, cpu_temp=cpu_temp
                 )
                 samples.append(sample)
         return samples
