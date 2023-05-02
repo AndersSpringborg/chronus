@@ -2,6 +2,7 @@ import subprocess
 
 import pytest
 
+from tests.system_integrations.fixtures import mock_subprocess_run
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 
 
