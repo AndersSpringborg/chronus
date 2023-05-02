@@ -9,7 +9,7 @@ class RepositoryInterface:
     def get_all_runs(self) -> list[Run]:
         pass
 
-    def save_benchmark(self, benchmark: Benchmark) -> Benchmark:
+    def save_benchmark(self, benchmark: Benchmark) -> int:
         pass
 
     def get_all_benchmarks(self) -> list[Benchmark]:

@@ -79,12 +79,12 @@ class FakeBencmarkRepository(RepositoryInterface):
         self.called_save_run += 1
         self.runs.append(run)
 
-    def save_benchmark(self, benchmark: Benchmark) -> Benchmark:
+    def save_benchmark(self, benchmark: Benchmark) -> int:
         self.called_save_benchmark += 1
         self.benchmarks.append(benchmark)
         if self._benchmark is not None:
-            return self._benchmark
-        return benchmark
+            return self._benchmark.id
+        return benchmark.id
 
 
 @pytest.fixture

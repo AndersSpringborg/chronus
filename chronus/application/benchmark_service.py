@@ -38,7 +38,7 @@ class BenchmarkService:
         cpu = self.cpu_info_service.get_cpu_info()
 
         benchmark = Benchmark(system_info=cpu, application="HPCG")
-        benchmark = self.repository.save_benchmark(benchmark)
+        benchmark_id = self.repository.save_benchmark(benchmark)
 
         configurations = Configurations(cpu)
         for configuration in configurations:
@@ -50,7 +50,7 @@ class BenchmarkService:
                 cores=configuration.cores,
                 frequency=configuration.frequency,
                 threads_per_core=configuration.threads_per_core,
-                benchmark_id=benchmark.id,
+                benchmark_id=benchmark_id,
             )
             self.application_runner.prepare()
             self.application_runner.run(configuration.cores, configuration.frequency)
