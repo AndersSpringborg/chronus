@@ -1,9 +1,11 @@
 import freezegun
 import pytest
 
+from chronus.domain.benchmark import Benchmark
+from chronus.domain.cpu_info import CpuInfo
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
-from chronus.SystemIntegration.sqlite_repository import SqliteRepository
+from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
 from tests.fixtures import datetime_from_string
 
 
@@ -19,14 +21,14 @@ def test_if_table_exists_and_empty(sqlite_db):
 
     # Assert
     assert sqlite_db.exists()
-    assert len(repo.get_all()) == 0
+    assert len(repo.get_all_runs()) == 0
 
 
 @freezegun.freeze_time("2020-01-01 00:00:1")
 def test_save_run(sqlite_db):
     # Arrange
     repo = SqliteRepository(sqlite_db)
-    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9, benchmark_id=1)
     run.add_sample(
         SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:1"), current_power_draw=10.0)
     )
@@ -36,10 +38,10 @@ def test_save_run(sqlite_db):
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
 
     # Act
-    repo.save(run)
+    repo.save_run(run)
 
     # Assert
-    run_saved = repo.get_all()[0]
+    run_saved = repo.get_all_runs()[0]
     assert run_saved.cpu == "test"
     assert run_saved.cores == 2
     assert run_saved.frequency == 1.5
@@ -55,7 +57,7 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(sqlite_db):
     repo = SqliteRepository(sqlite_db)
     start_time = datetime_from_string("2020-01-01 00:00:01")
     end_time = datetime_from_string("2020-01-01 00:00:02")
-    initial_run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+    initial_run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9, benchmark_id=1)
     initial_run.start_time = start_time
     initial_run.end_time = end_time
     initial_run.add_sample(
@@ -66,8 +68,8 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(sqlite_db):
     )
 
     # Act
-    repo.save(initial_run)
-    run = repo.get_all()[0]
+    repo.save_run(initial_run)
+    run = repo.get_all_runs()[0]
 
     # Assert
     assert run.cpu == "test"
@@ -82,7 +84,7 @@ def test_saving_a_run_can_be_loaded_with_the_same_values(sqlite_db):
 def test_save_run_with_system_samples(sqlite_db):
     # Arrange
     repo = SqliteRepository(sqlite_db)
-    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9, benchmark_id=1)
     sample1 = SystemSample(
         timestamp=datetime_from_string("2020-01-01 00:00:1"), current_power_draw=10.0
     )
@@ -94,8 +96,8 @@ def test_save_run_with_system_samples(sqlite_db):
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
 
     # Act
-    repo.save(run)
-    saved_run = repo.get_all()[0]
+    repo.save_run(run)
+    saved_run = repo.get_all_runs()[0]
     saved_samples = saved_run._samples
 
     # Assert
@@ -105,7 +107,7 @@ def test_save_run_with_system_samples(sqlite_db):
 def test_sample_have_correct_data(sqlite_db):
     # Arrange
     repo = SqliteRepository(sqlite_db)
-    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9, benchmark_id=1)
     sample1 = SystemSample(
         timestamp=datetime_from_string("2020-01-01 00:00:1"), current_power_draw=10.0
     )
@@ -115,10 +117,10 @@ def test_sample_have_correct_data(sqlite_db):
     run.add_sample(sample1)
     run.add_sample(sample2)
     run.finish(datetime_from_string("2020-01-01 00:00:02"))
-    repo.save(run)
+    repo.save_run(run)
 
     # Act
-    saved_run = repo.get_all()[0]
+    saved_run = repo.get_all_runs()[0]
     saved_samples = saved_run._samples
 
     # Assert
@@ -126,3 +128,63 @@ def test_sample_have_correct_data(sqlite_db):
     assert saved_samples[1].current_power_draw == 12.0
     assert saved_samples[0].timestamp == datetime_from_string("2020-01-01 00:00:1")
     assert saved_samples[1].timestamp == datetime_from_string("2020-01-01 00:00:2")
+
+
+def test_sample_have_cpu_temps(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9, benchmark_id=1)
+    sample1 = SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:1"), cpu_temp=50.0)
+    sample2 = SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:2"), cpu_temp=60.0)
+    run.add_sample(sample1)
+    run.add_sample(sample2)
+    run.finish(datetime_from_string("2020-01-01 00:00:02"))
+    repo.save_run(run)
+
+    # Act
+    saved_run = repo.get_all_runs()[0]
+    saved_samples = saved_run._samples
+
+    # Assert
+    assert saved_samples[0].cpu_temp == 50.0
+    assert saved_samples[1].cpu_temp == 60.0
+
+
+def test_sample_have_cpu_power(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9, benchmark_id=1)
+    sample1 = SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:1"), cpu_power=50.0)
+    sample2 = SystemSample(timestamp=datetime_from_string("2020-01-01 00:00:2"), cpu_power=60.0)
+    run.add_sample(sample1)
+    run.add_sample(sample2)
+    run.finish(datetime_from_string("2020-01-01 00:00:02"))
+    repo.save_run(run)
+
+    # Act
+    saved_run = repo.get_all_runs()[0]
+    saved_samples = saved_run._samples
+
+    # Assert
+    assert saved_samples[0].cpu_power == 50.0
+    assert saved_samples[1].cpu_power == 60.0
+
+
+def test_benchmark_have_runs(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    benchmark = Benchmark(application="test", system_info=CpuInfo(cores=2))
+    run1 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+    run2 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+    benchmark_id = repo.save_benchmark(benchmark)
+    benchmark.id = benchmark_id
+
+    # Act
+    benchmark.add_run(run1)
+    benchmark.add_run(run2)
+    repo.save_run(run1)
+    repo.save_run(run2)
+
+    # Assert
+    saved_benchmark = repo.get_all_benchmarks()[0]
+    assert len(saved_benchmark.runs) == 2

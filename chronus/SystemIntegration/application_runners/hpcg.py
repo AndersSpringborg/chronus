@@ -20,7 +20,7 @@ class HpcgService(ApplicationRunnerInterface):
     def __init__(self, hpcg_path, output_dir: str = ""):
         self._hpcg_path = hpcg_path
         if output_dir == "":
-            self._output_dir = "./"
+            self._output_dir = "../"
         else:
             if output_dir[-1] != "/":
                 output_dir += "/"

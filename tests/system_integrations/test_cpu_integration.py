@@ -2,8 +2,8 @@ import subprocess
 
 import pytest
 
-from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
-from tests.test_domain.fixtures import ls_cpu_output, mock_subprocess_run
+from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
+from tests.application.fixtures import ls_cpu_output
 
 
 @pytest.fixture

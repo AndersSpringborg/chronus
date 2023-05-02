@@ -1,17 +1,15 @@
 import logging
 
-from chronus.domain.interfaces.benchmark_run_repository_interface import (
-    BenchmarkRunRepositoryInterface,
-)
+from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.Run import Run
 
 CSV_HEADERS = "cpu,cores,thread_per_core,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"
 
 
-class CsvRunRepository(BenchmarkRunRepositoryInterface):
+class CsvRunRepository(RepositoryInterface):
     date_time_format = "%Y-%m-%d %H:%M:%S"
 
-    def get_all(self) -> list[Run]:
+    def get_all_runs(self) -> list[Run]:
         # make datetime parse 2023-04-27 16:00:36.435748
         with open(self.path) as f:
             rows = f.readlines()
@@ -42,7 +40,7 @@ class CsvRunRepository(BenchmarkRunRepositoryInterface):
                 runs.append(run)
         return runs
 
-    def save(self, run: Run) -> None:
+    def save_run(self, run: Run) -> None:
         with open(self.path, "a") as f:
             gflop = run.flop / 1.0e9
             f.write(

@@ -1,5 +1,5 @@
 from chronus.domain.configuration import Configurations
-from chronus.domain.interfaces.cpu_info_service_interface import CpuInfo
+from chronus.domain.cpu_info import CpuInfo
 
 
 def test_configuration_1_core_1_frequency():
