@@ -5,7 +5,7 @@ import freezegun
 import pytest
 from freezegun import freeze_time
 
-from chronus.domain.benchmark_service import BenchmarkService
+from chronus.application.benchmark_service import BenchmarkService
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
 from chronus.domain.interfaces.benchmark_run_repository_interface import (
     BenchmarkRunRepositoryInterface,

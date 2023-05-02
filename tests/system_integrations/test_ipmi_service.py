@@ -4,7 +4,7 @@ import pytest
 from pyghmi.ipmi.sdr import SensorReading
 
 from chronus.domain.system_sample import SystemSample
-from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
+from chronus.SystemIntegration.system_service_interfaces.ipmi_system_service import IpmiSystemService
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@ import pytest
 
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
-from chronus.SystemIntegration.csv_repository import CsvRunRepository
+from chronus.SystemIntegration.repositories.csv_repository import CsvRunRepository
 from tests.fixtures import datetime_from_string
 
 HEADERS = "cpu,cores,thread_per_core,frequency,gflops,gflop,energy_used,gflops_per_watt,start_time,end_time\n"

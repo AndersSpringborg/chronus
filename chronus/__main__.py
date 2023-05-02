@@ -3,19 +3,18 @@ import logging
 import os
 from enum import Enum
 from random import choice
-from time import sleep
 
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
 
 from chronus import version
-from chronus.domain.benchmark_service import BenchmarkService
-from chronus.domain.model_service import ModelService
-from chronus.SystemIntegration.cpu_info_service import LsCpuInfoService
-from chronus.SystemIntegration.hpcg import HpcgService
-from chronus.SystemIntegration.ipmi_system_service import IpmiSystemService
-from chronus.SystemIntegration.sqlite_repository import SqliteRepository
+from chronus.application.benchmark_service import BenchmarkService
+from chronus.application.model_service import ModelService
+from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
+from chronus.SystemIntegration.application_runners.hpcg import HpcgService
+from chronus.SystemIntegration.system_service_interfaces.ipmi_system_service import IpmiSystemService
+from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
 
 name = "chronus"
 
