@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import freezegun
 import pytest
@@ -12,79 +12,13 @@ from chronus.domain.interfaces.application_runner_interface import ApplicationRu
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
-from chronus.domain.Run import Run
-from chronus.domain.system_sample import SystemSample
+from tests.application.fixtures import (
+    FakeApplication,
+    FakeBencmarkRepository,
+    FakeCpuInfoService,
+    FakeSystemService,
+)
 from tests.fixtures import datetime_from_string
-
-
-class FakeCpuInfoService(CpuInfoServiceInterface):
-    def __init__(self, cores=4, frequencies=None):
-        if frequencies is None:
-            frequencies = [1.0, 2.0, 3.0]
-        self.cores = cores
-        self.frequencies = frequencies
-
-    def get_cpu_info(self) -> CpuInfo:
-        return CpuInfo(
-            name="Fake CPU", cores=self.cores, frequencies=self.frequencies, threads_per_core=1
-        )
-
-
-class FakeSystemService(SystemServiceInterface):
-    def __init__(self, power_draw=1.0):
-        self.power_draw = power_draw
-
-    def sample(self) -> SystemSample:
-        return SystemSample(timestamp=datetime.now(), current_power_draw=self.power_draw)
-
-
-class FakeApplication(ApplicationRunnerInterface):
-    def run(self, cores: int, frequency: float, thread_per_core=1):
-        pass
-
-    def __init__(self, seconds: int = None, result: float = None, gflops: float = None):
-        self.seconds = seconds or 0
-        self.__counter = 0
-        self.gflops = gflops or 10.0
-        self.result = result or 100.0
-        self.cleanup_called = 0
-        self.prepare_called = 0
-
-    def prepare(self):
-        self.prepare_called += 1
-
-    def cleanup(self):
-        self.cleanup_called += 1
-
-    def is_running(self) -> bool:
-        is_running = self.__counter < self.seconds
-        self.__counter += 1
-
-        return is_running
-
-
-class FakeBencmarkRepository(RepositoryInterface):
-    called_save_run = 0
-    runs: list[Run]
-
-    called_save_benchmark = 0
-    benchmarks: list[Benchmark]
-
-    def __init__(self, benchmark: Benchmark = None):
-        self.runs = []
-        self.benchmarks = []
-        self._benchmark = benchmark
-
-    def save_run(self, run: Run) -> None:
-        self.called_save_run += 1
-        self.runs.append(run)
-
-    def save_benchmark(self, benchmark: Benchmark) -> int:
-        self.called_save_benchmark += 1
-        self.benchmarks.append(benchmark)
-        if self._benchmark is not None:
-            return self._benchmark.id
-        return benchmark.id
 
 
 @pytest.fixture
