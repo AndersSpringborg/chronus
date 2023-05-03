@@ -1,23 +1,32 @@
+from typing import Annotated, Optional
+
 import json
 import logging
 import os
 from enum import Enum
+from pathlib import Path
 from random import choice
+from time import sleep
 
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.progress import Progress
+from rich.spinner import Spinner
 
 from chronus import version
-from chronus.SystemIntegration.optimizers.linear_regression import LinearRegressionOptimizer
 from chronus.application.benchmark_service import BenchmarkService
+from chronus.application.model_service import ModelService
+from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
+from chronus.SystemIntegration.optimizers.bruteforce_optmizer import BruteForceOptimizer
+from chronus.SystemIntegration.optimizers.linear_regression import LinearRegressionOptimizer
+from chronus.SystemIntegration.optimizers.random_tree_forrest import RandomTreeOptimizer
 from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
 from chronus.SystemIntegration.system_service_interfaces.ipmi_system_service import (
     IpmiSystemService,
 )
-from chronus.application.model_service import ModelService
 
 name = "chronus"
 
@@ -31,16 +40,17 @@ class Color(str, Enum):
     green = "green"
 
 
+console = Console()
 FORMAT = "%(message)s"
-logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()])
-
+logging.basicConfig(
+    level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(console=console)]
+)
 
 app = typer.Typer(
     name=name,
     help="A energy scheduling model, build for HPC.",
     add_completion=True,
 )
-console = Console()
 
 
 def version_callback(print_version: bool) -> None:
@@ -105,23 +115,51 @@ def main(
     pass
 
 
+class Model(str, Enum):
+    brute_force = "brute_force"
+    linear_regression = "linear_regression"
+    random_tree = "random_tree"
+
+
+class OptimizerFactory:
+    def get_optimizer(self, type: str) -> OptimizerInterface:
+        if type == LinearRegressionOptimizer.name():
+            return LinearRegressionOptimizer()
+        elif type == BruteForceOptimizer.name():
+            return BruteForceOptimizer()
+        elif type == RandomTreeOptimizer.name():
+            return RandomTreeOptimizer()
+        else:
+            raise Exception("Unknown optimizer type")
+
+
+def _choose_optimizer(model: Model) -> OptimizerInterface:
+    switcher = {
+        Model.brute_force: BruteForceOptimizer(),
+        Model.linear_regression: LinearRegressionOptimizer(),
+        Model.random_tree: RandomTreeOptimizer(),
+    }
+    return switcher.get(model, BruteForceOptimizer())
+
+
 @app.command(name="init-model")
 def init_model(
+    model: Model = Model.linear_regression,
     db_path: str = typer.Option(
         "data.db",
-        "-db",
+        "--db",
         "--database",
         help="The path to the database.",
-    )
+    ),
 ):
+    console.log(f"Using {model} model")
     model_service = ModelService(
         repository=SqliteRepository(db_path),
-        optimizer=LinearRegressionOptimizer(),
+        optimizer=_choose_optimizer(model),
     )
 
-    logging.info("Initializing model...")
-    model_service.init_model()
-    logging.info("Model saved.")
+    with console.status("training model", spinner="dots12"):
+        new_model = model_service.init_model()
 
 
 @app.command(name="slurm-config")
