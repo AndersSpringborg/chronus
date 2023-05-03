@@ -9,14 +9,15 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 from chronus import version
+from chronus.SystemIntegration.optimizers.linear_regression import LinearRegressionOptimizer
 from chronus.application.benchmark_service import BenchmarkService
-from chronus.application.model_service import ModelService
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
 from chronus.SystemIntegration.system_service_interfaces.ipmi_system_service import (
     IpmiSystemService,
 )
+from chronus.application.model_service import ModelService
 
 name = "chronus"
 
@@ -106,18 +107,20 @@ def main(
 
 @app.command(name="init-model")
 def init_model(
-    model_path: str = typer.Argument(..., help="The path to the model directory."),
-    data_path: str = typer.Argument(..., help="The path to the data directory."),
-):
-    abs_model_path = os.path.abspath(model_path)
-    abs_data_path = os.path.abspath(data_path)
-    model_service = ModelService(
-        model_repository=ModelRepository(abs_model_path),
-        data_repository=DataRepository(abs_data_path),
-        model_implementations=LinearRegression(),
+    db_path: str = typer.Option(
+        "data.db",
+        "-db",
+        "--database",
+        help="The path to the database.",
     )
-    model = model_service.init_model()
-    model_service.save_model(model)
+):
+    model_service = ModelService(
+        repository=SqliteRepository(db_path),
+        optimizer=LinearRegressionOptimizer(),
+    )
+
+    logging.info("Initializing model...")
+    model_service.init_model()
     logging.info("Model saved.")
 
 

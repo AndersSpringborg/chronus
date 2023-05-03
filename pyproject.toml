@@ -41,6 +41,9 @@ matplotlib = "^3.7.1"
 dataclasses-json = "^0.5.7"
 pyghmi = "^1.5.61"
 
+[tool.poetry.group.model_create.dependencies]
+pandas = "^2.0.1"
+
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.5"
 black = {version = "^23.3.0", allow-prereleases = true}
