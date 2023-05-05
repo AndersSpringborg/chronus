@@ -174,6 +174,22 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
 
 # add partician compute
 
+@app.command(name="run")
+def run(
+    hpcg_path: str,
+    cores: int = typer.Argument(..., help="The number of cores to run on."),
+    frequency: int = typer.Argument(..., help="The frequency to run on."),
+    threads_per_core: int = typer.Argument(..., help="The number of threads to run on."),
+):
+    hpcg = HpcgService(hpcg_path)
+    import asyncio
+
+    hpcg.run(cores, frequency, threads_per_core)
+    while hpcg.is_running():
+        await asyncio.sleep(2)
+
+    print(hpcg.gflops)
+
 
 @app.command(name="benchmark")
 def benchmark(
