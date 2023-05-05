@@ -329,6 +329,29 @@ def test_files_are_deleted_after_is_running_is_returning_false(
     assert not tmpdir.join("hpcg_benchmark_output").isdir()
 
 
+def test_returns_is_not_running_on_job_status_failed(
+    hpcg_service_factory, mock_subprocess_run, make_file
+):
+    # Arrange
+    app_runner = hpcg_service_factory()
+    app_runner.prepare()
+    mocked_subprocess_run = mock_subprocess_run()
+    mocked_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="", returncode=0, stdout=f"Submitted batch job 123"
+    )
+
+    # Act
+    app_runner.run(cores=10, frequency=1_500_000)
+    mocked_subprocess_run = mock_subprocess_run()
+    mocked_subprocess_run.return_value = subprocess.CompletedProcess(
+        args="", returncode=0, stdout=SCONTROL_IS_FAILED_OUTPUT
+    )
+    is_running = app_runner.is_running()
+
+    # Assert
+    assert not is_running
+
+
 def test_if_dir_exists_throw_error(hpcg_service_factory, tmpdir, mock_subprocess_run, make_file):
     # Arrange
     app_runner = hpcg_service_factory()
@@ -415,6 +438,34 @@ SCONTROL_IS_COMPLETED_OUTPUT = b"""JobId=450 JobName=RUN_CPU.slurm
    Power=
 
 """
+
+SCONTROL_IS_FAILED_OUTPUT = b"""JobId=919 JobName=HPCG_BENCHMARK
+   UserId=aaen(1000) GroupId=aaen(1000) MCS_label=N/A
+   Priority=4294901329 Nice=0 Account=(null) QOS=(null)
+   JobState=FAILED Reason=NonZeroExitCode Dependency=(null)
+   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=127:0
+   RunTime=00:00:01 TimeLimit=365-00:00:00 TimeMin=N/A
+   SubmitTime=2023-05-05T09:54:14 EligibleTime=2023-05-05T09:54:14
+   AccrueTime=2023-05-05T09:54:14
+   StartTime=2023-05-05T09:54:14 EndTime=2023-05-05T09:54:15 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2023-05-05T09:54:14 Scheduler=Backfill
+   Partition=debug AllocNode:Sid=host114:2085786
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=host114.grid.aau.dk
+   BatchHost=host114.grid.aau.dk
+   NumNodes=1 NumCPUs=12 NumTasks=11 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=12,mem=257393M,node=1,billing=12
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=1 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/home/aaen/chronus/hpcg_benchmark_output/HPCG_BENCHMARK.slurm
+   WorkDir=/home/aaen/chronus/hpcg_benchmark_output
+   StdErr=/home/aaen/chronus/hpcg_benchmark_output/HPCG_BENCHMARK.err
+   StdIn=/dev/null
+   StdOut=/home/aaen/chronus/hpcg_benchmark_output/HPCG_BENCHMARK.out
+   CPU_max_freq=1500000
+   Power="""
 
 HPCG_LOG = """WARNING: PERFORMING UNPRECONDITIONED ITERATIONS
 Call [0] Number of Iterations [11] Scaled Residual [2.71587e-14]

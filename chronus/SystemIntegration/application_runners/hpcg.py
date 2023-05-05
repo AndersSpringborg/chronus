@@ -62,6 +62,10 @@ class HpcgService(ApplicationRunnerInterface):
 
         is_running = re.search(r"JobState=COMPLETED", str(cmd.stdout)) is None
 
+        if re.search(r"JobState=FAILED", str(cmd.stdout)):
+            self.logger.error(f"Job with id {self._job_id} failed")
+            is_running = False
+
         return is_running
 
     @property
