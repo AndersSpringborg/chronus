@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import re
@@ -31,7 +32,8 @@ class HpcgService(ApplicationRunnerInterface):
 
     def prepare(self):
         if self._output_dir_exists():
-            raise FileExistsError("Output dir already exists")
+            self.logger.debug("Output dir exists, moving to backup")
+            self._move_output_dir_to_backup()
         self._prepare_output_dir()
         self._prepare_hpcg_dat_file()
         self.logger.info("Prepared HPCG Service")
@@ -150,3 +152,11 @@ srun --mpi=pmix_v4 --ntasks-per-core={thread_per_core} {self._hpcg_path}"""
             return True
         self.logger.warning(f"Directory does not exist: {output_dir}")
         return False
+
+    def _move_output_dir_to_backup(self):
+        output_dir = self._output_dir + "hpcg_benchmark_output"
+        backup_dir = (
+            self._output_dir + "hpcg_benchmark_output" + "_" + datetime.datetime.now().isoformat()
+        )
+        os.rename(output_dir, backup_dir)
+        self.logger.info(f"Moved directory: {output_dir} to: {backup_dir}")

@@ -1,5 +1,6 @@
 import subprocess
 
+import freezegun
 import pytest
 
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
@@ -352,17 +353,20 @@ def test_returns_is_not_running_on_job_status_failed(
     assert not is_running
 
 
-def test_if_dir_exists_throw_error(hpcg_service_factory, tmpdir, mock_subprocess_run, make_file):
+@freezegun.freeze_time("2020-11-24 14:00:00")
+def test_if_dir_is_not_empty_backup_old_files_with_timestamp(
+    hpcg_service_factory, tmpdir, make_file
+):
     # Arrange
     app_runner = hpcg_service_factory()
+    # Create a file in the directory, so when we run it the second time, it will be not empty
     app_runner.prepare()
-    # tmpdir.mkdir("hpcg_benchmark_output")
-    # Act
-    with pytest.raises(FileExistsError):
-        app_runner.prepare()
 
+    # Act
+    app_runner.prepare()
     # Assert
     assert tmpdir.join("hpcg_benchmark_output").isdir()
+    assert tmpdir.join("hpcg_benchmark_output_2020-11-24T14:00:00").isdir()
 
 
 HPCG_DAT_FILE_CONTENT = """HPCG benchmark input file
