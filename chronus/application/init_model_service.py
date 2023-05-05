@@ -24,7 +24,7 @@ class ModelService:
     def load_model(self):
         pass
 
-    def init_model(self):
+    def run(self):
         self._logger.info("Initializing model getting data")
         runs = self.repository.get_all_runs()
 

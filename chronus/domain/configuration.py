@@ -7,9 +7,9 @@ from chronus.domain.cpu_info import CpuInfo
 
 @dataclass
 class Configuration:
-    cores: int
-    frequency: float
-    threads_per_core: int
+    cores: int = 0
+    frequency: float = 0.0
+    threads_per_core: int = 0
 
 
 def make_core_interval(cores_number: int):

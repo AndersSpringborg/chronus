@@ -1,4 +1,4 @@
-from chronus.application.model_service import ModelService
+from chronus.application.init_model_service import ModelService
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.Run import Run
 from tests.application.fixtures import FakeBencmarkRepository
@@ -20,7 +20,7 @@ def test_model_service_returns_id_on_save():
     model_service = ModelService(repository, optimizer)
 
     # act
-    id = model_service.init_model()
+    id = model_service.run()
 
     # assert
     assert id == 1
