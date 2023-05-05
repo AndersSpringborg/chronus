@@ -1,6 +1,6 @@
-from chronus.SystemIntegration.optimizers.bruteforce_optmizer import BruteForceOptimizer
-from chronus.domain.Run import Run
 from chronus.domain.configuration import Configuration
+from chronus.domain.Run import Run
+from chronus.SystemIntegration.optimizers.bruteforce_optmizer import BruteForceOptimizer
 
 
 def test_saves_and_loads_the_values_from_file(tmp_path):

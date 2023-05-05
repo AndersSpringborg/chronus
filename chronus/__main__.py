@@ -16,7 +16,7 @@ from rich.spinner import Spinner
 
 from chronus import version
 from chronus.application.benchmark_service import BenchmarkService
-from chronus.application.model_service import ModelService
+from chronus.application.init_model_service import ModelService
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
@@ -159,7 +159,7 @@ def init_model(
     )
 
     with console.status("training model", spinner="dots12"):
-        new_model = model_service.init_model()
+        new_model = model_service.run()
 
 
 @app.command(name="slurm-config")

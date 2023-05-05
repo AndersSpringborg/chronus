@@ -37,6 +37,5 @@ class BruteForceOptimizer(OptimizerInterface):
         return self.__best_run
 
 
-
 def energy_efficiency(run: Run) -> float:
     return run.gflops_per_watt
