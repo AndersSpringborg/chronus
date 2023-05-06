@@ -3,6 +3,7 @@ import subprocess
 import freezegun
 import pytest
 
+from chronus.application.benchmark_service import JobFailedException
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 from tests.system_integrations.fixtures import mock_subprocess_run
 
@@ -330,7 +331,7 @@ def test_files_are_deleted_after_is_running_is_returning_false(
     assert not tmpdir.join("hpcg_benchmark_output").isdir()
 
 
-def test_returns_is_not_running_on_job_status_failed(
+def test_returns_is_raises_job_failed_exception_when_scontrol_is_failed(
     hpcg_service_factory, mock_subprocess_run, make_file
 ):
     # Arrange
@@ -347,10 +348,10 @@ def test_returns_is_not_running_on_job_status_failed(
     mocked_subprocess_run.return_value = subprocess.CompletedProcess(
         args="", returncode=0, stdout=SCONTROL_IS_FAILED_OUTPUT
     )
-    is_running = app_runner.is_running()
 
     # Assert
-    assert not is_running
+    with pytest.raises(JobFailedException):
+        app_runner.is_running()
 
 
 @freezegun.freeze_time("2020-11-24 14:00:00")

@@ -5,6 +5,7 @@ import re
 import subprocess
 from time import sleep
 
+from chronus.application.benchmark_service import JobFailedException
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
 from chronus.domain.Run import Run
 
@@ -66,7 +67,7 @@ class HpcgService(ApplicationRunnerInterface):
 
         if re.search(r"JobState=FAILED", str(cmd.stdout)):
             self.logger.error(f"Job with id {self._job_id} failed")
-            is_running = False
+            raise JobFailedException(f"Job with id {self._job_id} failed")
 
         return is_running
 
