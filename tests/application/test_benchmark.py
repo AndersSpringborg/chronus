@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import timedelta
 
@@ -134,14 +135,10 @@ def test_benchmark_saved_after_each_configuration(skip_sleep):
 def test_calls_cleanup_after_each_run(skip_sleep):
     # Arrange
     application_runner = FakeApplication(4)
-    benchmark_run_repository = FakeBencmarkRepository()
     cpu_info_service = FakeCpuInfoService(cores=2, frequencies=[1.0])
-    system_service = FakeSystemService()
     benchmark = benchmark_fixture(
         cpu_info_service=cpu_info_service,
-        benchmark_repository=benchmark_run_repository,
         application=application_runner,
-        system_service=system_service,
     )
 
     # Act
@@ -149,6 +146,41 @@ def test_calls_cleanup_after_each_run(skip_sleep):
 
     # Assert
     assert application_runner.cleanup_called == 2
+
+
+def test_calls_cleanup_when_application_raises_job_error(skip_sleep, caplog):
+    # Arrange
+    application_runner = FakeApplication(4, raise_job_error=True)
+    cpu_info_service = FakeCpuInfoService(cores=1, frequencies=[1.0])
+    benchmark = benchmark_fixture(
+        cpu_info_service=cpu_info_service,
+        application=application_runner,
+    )
+
+    # Act
+    benchmark.run()
+
+    # Assert
+    assert (
+        "ERROR    chronus.application.benchmark_service:benchmark_service.py:64 Job failed with config 1 cores, 1e-06 GHz and 1 threads per core\n"
+        in caplog.text
+    )
+
+
+def test_logger_outputs_config_on_job_failure(skip_sleep):
+    # Arrange
+    application_runner = FakeApplication(4, raise_job_error=True)
+    cpu_info_service = FakeCpuInfoService(cores=1, frequencies=[1.0])
+    benchmark = benchmark_fixture(
+        cpu_info_service=cpu_info_service,
+        application=application_runner,
+    )
+
+    # Act
+    benchmark.run()
+
+    # Assert
+    assert application_runner.cleanup_called == 1
 
 
 def test_calls_prepare_before_each_run(skip_sleep):

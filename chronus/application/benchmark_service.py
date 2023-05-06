@@ -10,6 +10,10 @@ from chronus.domain.interfaces.system_service_interface import SystemServiceInte
 from chronus.domain.Run import Run
 
 
+class JobFailedException(Exception):
+    pass
+
+
 class BenchmarkService:
     cpu: str
     gflops: float
@@ -54,21 +58,28 @@ class BenchmarkService:
             )
             self.application_runner.prepare()
             self.application_runner.run(configuration.cores, configuration.frequency)
-            while self.application_runner.is_running():
-                sample = self.system_service.sample()
-                run.add_sample(sample)
-                time.sleep(1)
+            try:
+                self._wait_for_application_to_finish_and_save_run(configuration, cpu, run)
+            except JobFailedException:
+                self.logger.error(
+                    f"Job failed with config {configuration.cores} cores, {configuration.frequency / 1.0e6} GHz and {configuration.threads_per_core} threads per core"
+                )
+            finally:
+                self.application_runner.cleanup()
 
-            run.add_sample(self.system_service.sample())
-            run.finish()
-            run.gflops = self.application_runner.gflops
-            run.flop = self.application_runner.result
-            self.application_runner.cleanup()
-            self.repository.save_run(run)
-
-            self.logger.info(
-                f"Benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz complete, GFLOPS: {run.gflops}"
-            )
+    def _wait_for_application_to_finish_and_save_run(self, configuration, cpu, run):
+        while self.application_runner.is_running():
+            sample = self.system_service.sample()
+            run.add_sample(sample)
+            time.sleep(1)
+        run.add_sample(self.system_service.sample())
+        run.finish()
+        run.gflops = self.application_runner.gflops
+        run.flop = self.application_runner.result
+        self.repository.save_run(run)
+        self.logger.info(
+            f"Benchmark for {cpu} with {configuration.cores} cores and {configuration.frequency} MHz complete, GFLOPS: {run.gflops}"
+        )
 
     def _save_benchmark(self, benchmark: Benchmark):
         self.repository.save_benchmark(benchmark)
