@@ -98,7 +98,7 @@ def test_save_run_with_system_samples(sqlite_db):
     # Act
     repo.save_run(run)
     saved_run = repo.get_all_runs()[0]
-    saved_samples = saved_run.__samples
+    saved_samples = saved_run.samples
 
     # Assert
     assert len(saved_samples) == 2
@@ -121,7 +121,7 @@ def test_sample_have_correct_data(sqlite_db):
 
     # Act
     saved_run = repo.get_all_runs()[0]
-    saved_samples = saved_run.__samples
+    saved_samples = saved_run.samples
 
     # Assert
     assert saved_samples[0].current_power_draw == 10.0
@@ -143,7 +143,7 @@ def test_sample_have_cpu_temps(sqlite_db):
 
     # Act
     saved_run = repo.get_all_runs()[0]
-    saved_samples = saved_run.__samples
+    saved_samples = saved_run.samples
 
     # Assert
     assert saved_samples[0].cpu_temp == 50.0
@@ -163,7 +163,7 @@ def test_sample_have_cpu_power(sqlite_db):
 
     # Act
     saved_run = repo.get_all_runs()[0]
-    saved_samples = saved_run.__samples
+    saved_samples = saved_run.samples
 
     # Assert
     assert saved_samples[0].cpu_power == 50.0

@@ -167,7 +167,7 @@ class SqliteRepository(RepositoryInterface):
                 run.flop = float(flop)
                 run.__energy_used_joules = float(energy_used)
                 run.__gflops_per_watt = float(gflops_per_watt)
-                run.__samples = self._get_system_samples(run_id=run_id)
+                run.samples = self._get_system_samples(run_id=run_id)
                 runs.append(run)
         return runs
 
@@ -193,7 +193,7 @@ class SqliteRepository(RepositoryInterface):
             run_id = cursor.lastrowid
 
             # Save system samples associated with the run
-            for sample in run.__samples:
+            for sample in run.samples:
                 cursor.execute(
                     INSERT_SYSTEM_SAMPLE_QUERY,
                     (

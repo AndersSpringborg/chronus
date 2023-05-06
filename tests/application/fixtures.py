@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pytest
 
+from chronus.application.benchmark_service import JobFailedException
 from chronus.domain.benchmark import Benchmark
 from chronus.domain.cpu_info import CpuInfo
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
@@ -80,13 +81,16 @@ class FakeApplication(ApplicationRunnerInterface):
     def run(self, cores: int, frequency: float, thread_per_core=1):
         pass
 
-    def __init__(self, seconds: int = None, result: float = None, gflops: float = None):
+    def __init__(
+        self, seconds: int = None, result: float = None, gflops: float = None, raise_job_error=False
+    ):
         self.seconds = seconds or 0
         self.__counter = 0
         self.gflops = gflops or 10.0
         self.result = result or 100.0
         self.cleanup_called = 0
         self.prepare_called = 0
+        self.raise_job_error = raise_job_error
 
     def prepare(self):
         self.prepare_called += 1
@@ -97,6 +101,9 @@ class FakeApplication(ApplicationRunnerInterface):
     def is_running(self) -> bool:
         is_running = self.__counter < self.seconds
         self.__counter += 1
+
+        if self.raise_job_error:
+            raise JobFailedException("Job failed: 'message'")
 
         return is_running
 
