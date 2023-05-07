@@ -35,8 +35,8 @@ class CsvRunRepository(RepositoryInterface):
                 run.frequency = float(frequency)
                 run.gflops = float(gflops)
                 run.flop = float(gflop) * 1.0e9
-                run._energy_used_joules = float(energy_used)
-                run._gflops_per_watt = float(gflops_per_watt)
+                run.__energy_used_joules = float(energy_used)
+                run.__gflops_per_watt = float(gflops_per_watt)
                 runs.append(run)
         return runs
 

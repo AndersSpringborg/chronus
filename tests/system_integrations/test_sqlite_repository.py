@@ -2,7 +2,8 @@ import freezegun
 import pytest
 
 from chronus.domain.benchmark import Benchmark
-from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.cpu_info import SystemInfo
+from chronus.domain.model import Model
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
@@ -11,7 +12,9 @@ from tests.fixtures import datetime_from_string
 
 @pytest.fixture
 def sqlite_db(tmp_path):
-    return tmp_path / "test.db"
+    path = tmp_path / "test.db"
+    path.touch()
+    return path
 
 
 def test_if_table_exists_and_empty(sqlite_db):
@@ -98,7 +101,7 @@ def test_save_run_with_system_samples(sqlite_db):
     # Act
     repo.save_run(run)
     saved_run = repo.get_all_runs()[0]
-    saved_samples = saved_run._samples
+    saved_samples = saved_run.samples
 
     # Assert
     assert len(saved_samples) == 2
@@ -121,7 +124,7 @@ def test_sample_have_correct_data(sqlite_db):
 
     # Act
     saved_run = repo.get_all_runs()[0]
-    saved_samples = saved_run._samples
+    saved_samples = saved_run.samples
 
     # Assert
     assert saved_samples[0].current_power_draw == 10.0
@@ -143,7 +146,7 @@ def test_sample_have_cpu_temps(sqlite_db):
 
     # Act
     saved_run = repo.get_all_runs()[0]
-    saved_samples = saved_run._samples
+    saved_samples = saved_run.samples
 
     # Assert
     assert saved_samples[0].cpu_temp == 50.0
@@ -163,7 +166,7 @@ def test_sample_have_cpu_power(sqlite_db):
 
     # Act
     saved_run = repo.get_all_runs()[0]
-    saved_samples = saved_run._samples
+    saved_samples = saved_run.samples
 
     # Assert
     assert saved_samples[0].cpu_power == 50.0
@@ -173,7 +176,7 @@ def test_sample_have_cpu_power(sqlite_db):
 def test_benchmark_have_runs(sqlite_db):
     # Arrange
     repo = SqliteRepository(sqlite_db)
-    benchmark = Benchmark(application="test", system_info=CpuInfo(cores=2))
+    benchmark = Benchmark(application="test", system_info=SystemInfo(cores=2))
     run1 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
     run2 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
     benchmark_id = repo.save_benchmark(benchmark)
@@ -188,3 +191,129 @@ def test_benchmark_have_runs(sqlite_db):
     # Assert
     saved_benchmark = repo.get_all_benchmarks()[0]
     assert len(saved_benchmark.runs) == 2
+
+
+def test_saving_benchmark_saves_runs(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    benchmark = Benchmark(application="test", system_info=SystemInfo(cores=2), id=1)
+    run1 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+    run2 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+
+    # Act
+    benchmark.add_run(run1)
+    benchmark.add_run(run2)
+    repo.save_benchmark(benchmark)
+
+    # Assert
+    saved_benchmark = repo.get_all_benchmarks()[0]
+    assert len(saved_benchmark.runs) == 2
+
+
+def test_cannot_save_runs_without_benchmark_id(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+
+    # Act
+    with pytest.raises(ValueError):
+        repo.save_run(run)
+
+
+def test_getting_runs_from_a_specific_system(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    sys1 = SystemInfo(cpu_name="sys1")
+    benchmark1 = Benchmark(id=1, system_info=sys1, application="")
+    benchmark1.add_run(Run(cpu="run1"))
+
+    sys2 = SystemInfo(cpu_name="sys2")
+    benchmark2 = Benchmark(
+        id=2,
+        system_info=sys2,
+        application="",
+    )
+    benchmark2.add_run(Run(cpu="run2"))
+
+    repo.save_benchmark(benchmark1)
+    repo.save_benchmark(benchmark2)
+
+    # Act
+    runs = repo.get_all_runs_from_system(sys2)
+
+    # Assert
+    assert len(runs) == 1
+    assert runs[0].cpu == "run2"
+
+
+def test_get_all_system_info(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    sys1 = SystemInfo(cpu_name="sys1")
+    benchmark1 = Benchmark(id=1, system_info=sys1, application="")
+    sys2 = SystemInfo(cpu_name="sys2")
+    benchmark2 = Benchmark(
+        id=2,
+        system_info=sys2,
+        application="",
+    )
+    repo.save_benchmark(benchmark1)
+    repo.save_benchmark(benchmark2)
+
+    # Act
+    systems = repo.get_all_system_info()
+
+    # Assert
+    assert len(systems) == 2
+    assert systems[0].cpu_name == "sys1"
+    assert systems[1].cpu_name == "sys2"
+
+
+def test_save_and_load_model(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    sys = SystemInfo(cpu_name="sys1")
+    model = Model(
+        name="test",
+        system_info=sys,
+        path_to_model="test",
+        type="brute-test",
+        created_at=datetime_from_string("2020-01-01 00:00:1"),
+    )
+
+    # Act
+    model_id = repo.save_model(model)
+    saved_model = repo.get_all_models()[0]
+
+    # Assert
+    assert saved_model.name == "test"
+    assert saved_model.id == model_id
+    assert saved_model.system_info.cpu_name == "sys1"
+    assert saved_model.path_to_model == "test"
+    assert saved_model.type == "brute-test"
+    assert saved_model.created_at == datetime_from_string("2020-01-01 00:00:1")
+
+
+def test_get_model_by_id(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    sys = SystemInfo(cpu_name="sys1")
+    model = Model(
+        name="test",
+        system_info=sys,
+        path_to_model="test",
+        type="brute-test",
+        created_at=datetime_from_string("2020-01-01 00:00:1"),
+    )
+    model_id = repo.save_model(model)
+
+    # Act
+    saved_model = repo.get_model(model_id)
+
+    # Assert
+    assert saved_model.name == "test"
+    assert saved_model.id == model_id
+    assert saved_model.system_info.cpu_name == "sys1"
+    assert saved_model.path_to_model == "test"
+    assert saved_model.type == "brute-test"
+    assert saved_model.created_at == datetime_from_string("2020-01-01 00:00:1")

@@ -1,13 +1,13 @@
 import datetime
 from dataclasses import dataclass
 
-from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.cpu_info import SystemInfo
 from chronus.domain.Run import Run
 
 
 @dataclass
 class Benchmark:
-    system_info: CpuInfo
+    system_info: SystemInfo
     application: str
     id: int = None
     created_at: datetime = datetime.datetime.now()

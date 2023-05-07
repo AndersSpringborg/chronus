@@ -1,8 +1,14 @@
 import datetime
+from dataclasses import dataclass
+
+from chronus.domain.cpu_info import SystemInfo
 
 
+@dataclass
 class Model:
     name: str
-    hash: str
+    system_info: SystemInfo
     path_to_model: str
-    created_at: datetime
+    type: str  # Nordjyske bank
+    created_at: datetime.datetime
+    id: int = None
