@@ -4,7 +4,7 @@ import logging
 import re
 import subprocess
 
-from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.cpu_info import SystemInfo
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 
 
@@ -12,28 +12,28 @@ class LsCpuInfoService(CpuInfoServiceInterface):
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
-    def get_cpu_info(self) -> CpuInfo:
+    def get_cpu_info(self) -> SystemInfo:
         self.logger.debug("Running lscpu command to get CPU info")
-        output = subprocess.run("lscpu", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        output = subprocess.run("lscpu", capture_output=True, text=True)
 
         if output.returncode != 0:
             raise RuntimeError(f"Failed to run lscpu: {output.stderr}")
-        info = CpuInfo()
+        info = SystemInfo()
 
-        info.name = self._get_cpu_model_name(output.stdout)
+        info.cpu_name = self._get_cpu_model_name(output.stdout)
         info.cores = self._get_cores(output.stdout)
         info.frequencies = self._get_frequencies()
         info.threads_per_core = self._get_threads_per_core(output.stdout)
 
         return info
 
-    def _get_frequencies(self) -> List[float]:
+    def _get_frequencies(self) -> list[float]:
         self.logger.debug("Reading available CPU frequencies")
         try:
-            file = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies", "r")
+            file = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies")
             output = file.read()
             file.close()
-        except IOError:
+        except OSError:
             raise RuntimeError(
                 "Failed to read /sys/devices/system/cpu/cpu*/cpufreq/scaling_available_frequencies"
             )
@@ -48,11 +48,11 @@ class LsCpuInfoService(CpuInfoServiceInterface):
         return frequencies
 
     def _get_cpu_model_name(self, stdout: str) -> str:
-        self.logger.debug("Parsing output of lscpu to get CPU model name")
-        model_name = re.search(r"Model name:\s+(.*)", stdout)
+        self.logger.debug("Parsing output of lscpu to get CPU model cpu_name")
+        model_name = re.search(r"Model cpu_name:\s+(.*)", stdout)
 
         if model_name is None:
-            self.logger.debug("Failed to find CPU model name")
+            self.logger.debug("Failed to find CPU model cpu_name")
             return "Unknown"
 
         return model_name.group(1)

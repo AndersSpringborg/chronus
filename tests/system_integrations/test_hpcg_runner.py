@@ -376,7 +376,7 @@ Benchmarked on 2020-11-24 14:00:00
 900"""
 
 HPCG_SLURM_FILE_CONTENT = """#!/bin/bash
-#SBATCH --job-name=HPCG_BENCHMARK
+#SBATCH --job-cpu_name=HPCG_BENCHMARK
 #SBATCH --output=HPCG_BENCHMARK.out
 #SBATCH --error=HPCG_BENCHMARK.err
 #SBATCH --nodes=1

@@ -2,7 +2,7 @@ import freezegun
 import pytest
 
 from chronus.domain.benchmark import Benchmark
-from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.cpu_info import SystemInfo
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
@@ -175,7 +175,7 @@ def test_sample_have_cpu_power(sqlite_db):
 def test_benchmark_have_runs(sqlite_db):
     # Arrange
     repo = SqliteRepository(sqlite_db)
-    benchmark = Benchmark(application="test", system_info=CpuInfo(cores=2))
+    benchmark = Benchmark(application="test", system_info=SystemInfo(cores=2))
     run1 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
     run2 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
     benchmark_id = repo.save_benchmark(benchmark)

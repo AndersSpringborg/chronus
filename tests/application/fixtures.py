@@ -5,7 +5,7 @@ import pytest
 
 from chronus.application.benchmark_service import JobFailedException
 from chronus.domain.benchmark import Benchmark
-from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.cpu_info import SystemInfo
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
@@ -41,7 +41,7 @@ NUMA node(s):        1
 Vendor ID:           AuthenticAMD
 CPU family:          23
 Model:               49
-Model name:          AMD EPYC 7502P 32-Core Processor
+Model cpu_name:          AMD EPYC 7502P 32-Core Processor
 Stepping:            0
 CPU MHz:             2500.000
 CPU max MHz:         2500.0000
@@ -64,9 +64,9 @@ class FakeCpuInfoService(CpuInfoServiceInterface):
         self.cores = cores
         self.frequencies = frequencies
 
-    def get_cpu_info(self) -> CpuInfo:
-        return CpuInfo(
-            name="Fake CPU", cores=self.cores, frequencies=self.frequencies, threads_per_core=1
+    def get_cpu_info(self) -> SystemInfo:
+        return SystemInfo(
+            cpu_name="Fake CPU", cores=self.cores, frequencies=self.frequencies, threads_per_core=1
         )
 
 

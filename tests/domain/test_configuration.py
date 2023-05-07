@@ -1,10 +1,10 @@
 from chronus.domain.configuration import Configurations
-from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.cpu_info import SystemInfo
 
 
 def test_configuration_1_core_1_frequency():
     # arrange
-    info = CpuInfo(name="cpu", cores=1, frequencies=[1.0])
+    info = SystemInfo(cpu_name="cpu", cores=1, frequencies=[1.0])
 
     # act
     configurations = Configurations(info)
@@ -17,7 +17,7 @@ def test_configuration_1_core_1_frequency():
 
 def test_configuration_2_cores_1_frequency():
     # arrange
-    info = CpuInfo(name="cpu", cores=2, frequencies=[1.0])
+    info = SystemInfo(cpu_name="cpu", cores=2, frequencies=[1.0])
 
     # act
     configurations = Configurations(info)
@@ -32,7 +32,7 @@ def test_configuration_2_cores_1_frequency():
 
 def test_configuration_2_cores_2_frequency():
     # arrange
-    info = CpuInfo(name="cpu", cores=2, frequencies=[3.0, 4.0])
+    info = SystemInfo(cpu_name="cpu", cores=2, frequencies=[3.0, 4.0])
 
     # act
     configurations = Configurations(info)
@@ -53,7 +53,7 @@ def test_configuration_2_cores_2_frequency():
 
 
 def test_configuration_with_2_threads_per_core_makes_configuration_for_running_1_thread_and_2_threads():
-    info = CpuInfo(name="cpu", cores=1, frequencies=[1.0], threads_per_core=2)
+    info = SystemInfo(cpu_name="cpu", cores=1, frequencies=[1.0], threads_per_core=2)
 
     configurations = Configurations(info)
 
