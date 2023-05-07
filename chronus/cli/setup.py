@@ -5,8 +5,6 @@ from chronus.SystemIntegration.optimizers.random_tree_forrest import RandomTreeO
 
 
 def get_optimizer(model_type: str) -> OptimizerInterface:
-    print("model_type", model_type)
-    print("LinearRegressionOptimizer.cpu_name", BruteForceOptimizer.name())
     if model_type == LinearRegressionOptimizer.name():
         return LinearRegressionOptimizer()
     elif model_type == BruteForceOptimizer.name():

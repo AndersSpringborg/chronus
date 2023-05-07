@@ -41,7 +41,7 @@ NUMA node(s):        1
 Vendor ID:           AuthenticAMD
 CPU family:          23
 Model:               49
-Model cpu_name:          AMD EPYC 7502P 32-Core Processor
+Model name:          AMD EPYC 7502P 32-Core Processor
 Stepping:            0
 CPU MHz:             2500.000
 CPU max MHz:         2500.0000

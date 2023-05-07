@@ -48,8 +48,8 @@ class LsCpuInfoService(CpuInfoServiceInterface):
         return frequencies
 
     def _get_cpu_model_name(self, stdout: str) -> str:
-        self.logger.debug("Parsing output of lscpu to get CPU model cpu_name")
-        model_name = re.search(r"Model cpu_name:\s+(.*)", stdout)
+        self.logger.debug("Parsing output of lscpu to get CPU model name")
+        model_name = re.search(r"Model name:\s+(.*)", stdout)
 
         if model_name is None:
             self.logger.debug("Failed to find CPU model cpu_name")
