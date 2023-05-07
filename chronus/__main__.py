@@ -1,18 +1,12 @@
-from typing import Annotated, Optional
-
 import json
 import logging
 import os
 from enum import Enum
-from pathlib import Path
 from random import choice
-from time import sleep
 
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
-from rich.progress import Progress
-from rich.spinner import Spinner
 
 from chronus import version
 from chronus.application.benchmark_service import BenchmarkService
@@ -99,6 +93,7 @@ class StandardConfig:
 
 FORMAT = "%(message)s"
 logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()])
+logger = logging.getLogger("main")
 
 
 @app.callback()
@@ -121,18 +116,6 @@ class Model(str, Enum):
     random_tree = "random_tree"
 
 
-class OptimizerFactory:
-    def get_optimizer(self, type: str) -> OptimizerInterface:
-        if type == LinearRegressionOptimizer.name():
-            return LinearRegressionOptimizer()
-        elif type == BruteForceOptimizer.name():
-            return BruteForceOptimizer()
-        elif type == RandomTreeOptimizer.name():
-            return RandomTreeOptimizer()
-        else:
-            raise Exception("Unknown optimizer type")
-
-
 def _choose_optimizer(model: Model) -> OptimizerInterface:
     switcher = {
         Model.brute_force: BruteForceOptimizer(),
@@ -152,7 +135,7 @@ def init_model(
         help="The path to the database.",
     ),
 ):
-    console.log(f"Using {model} model")
+    logger.info("Initializing model of type %s", model.name)
     model_service = ModelService(
         repository=SqliteRepository(db_path),
         optimizer=_choose_optimizer(model),
@@ -173,6 +156,7 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
 
 
 # add partician compute
+
 
 @app.command(name="run")
 def run(
