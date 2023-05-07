@@ -44,13 +44,14 @@ class InitModelService:
         self.__logger.info("Initializing model training model")
         self.__ensure_optimizer_dir()
         self.optimizer.make_model(runs)
-        self.optimizer.save(self.__optimizer_dir + "/" + str(hash(self.optimizer)))
+        path_to_model = self.__optimizer_dir + "/" + str(hash(self.optimizer))
+        self.optimizer.save(path_to_model)
 
         model = Model(
             name="model_name",
             system_info=system,
             type=self.optimizer.name(),
-            path_to_model="path/to/model",
+            path_to_model=path_to_model,
             created_at=datetime.now(),
         )
 

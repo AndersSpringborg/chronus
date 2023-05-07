@@ -13,7 +13,9 @@ from rich.table import Table
 from chronus import version
 from chronus.application.benchmark_service import BenchmarkService
 from chronus.application.init_model_service import InitModelService
+from chronus.application.load_model_service import LoadModelService
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
+from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.optimizers.bruteforce_optmizer import BruteForceOptimizer
@@ -118,11 +120,11 @@ class Model(str, Enum):
     random_tree = RandomTreeOptimizer.name()
 
 
-def _choose_optimizer(model: Model) -> OptimizerInterface:
+def _choose_optimizer(model: str) -> OptimizerInterface:
     switcher = {
-        Model.brute_force: BruteForceOptimizer(),
-        Model.linear_regression: LinearRegressionOptimizer(),
-        Model.random_tree: RandomTreeOptimizer(),
+        BruteForceOptimizer.name(): BruteForceOptimizer(),
+        LinearRegressionOptimizer.name(): LinearRegressionOptimizer(),
+        RandomTreeOptimizer.name(): RandomTreeOptimizer(),
     }
     return switcher.get(model, BruteForceOptimizer())
 
@@ -171,6 +173,52 @@ def present_systems(repo):
     for i, system in enumerate(systems):
         table.add_row(str(i), str(system))
     console.print(table)
+
+
+def present_models(repo: RepositoryInterface):
+    models = repo.get_all_models()
+    table = Table(title="Available Models", style="green")
+    table.add_column("ID", justify="center", style="cyan")
+    table.add_column("Type", justify="center", style="magenta")
+    table.add_column("Created", justify="center", style="magenta")
+    table.add_column("System", justify="center", style="magenta")
+    for model in models:
+        table.add_row(
+            str(model.id), model.type, model.created_at.strftime("%d/%m/%Y"), str(model.system_info)
+        )
+    console.print(table)
+
+
+@app.command(name="load-model")
+def load_model(
+    model_id: int = typer.Option(
+        -1,
+        "--model",
+        help="The id of the model to use.",
+    ),
+    db_path: str = typer.Option(
+        "data.db",
+        "--db",
+        "--database",
+        help="The path to the database.",
+    ),
+):
+    repo = SqliteRepository(db_path)
+    if model_id == -1:
+        console.print("[yellow]You need to choose a model to load.[/yellow]")
+        console.print("[green]Here are the available models:[/green]")
+        present_models(repo)
+
+        console.print("[yellow]Specify the model id with --model <id>[/yellow]")
+
+        raise typer.Exit()
+
+    model = repo.get_model(model_id)
+
+    load_model = LoadModelService(
+        model_id=model_id, repository=repo, optimizer=_choose_optimizer(model.type)
+    )
+    load_model.run()
 
 
 @app.command(name="slurm-config")

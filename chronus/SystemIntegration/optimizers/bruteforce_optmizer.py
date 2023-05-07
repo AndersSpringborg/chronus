@@ -1,6 +1,6 @@
 import dataclasses
 import json
-from dataclasses import dataclass
+import logging
 
 from chronus.domain.configuration import Configuration
 from chronus.domain.cpu_info import SystemInfo
@@ -9,6 +9,9 @@ from chronus.domain.Run import Run
 
 
 class BruteForceOptimizer(OptimizerInterface):
+    def __init__(self):
+        self.__logger = logging.getLogger(__name__)
+
     @staticmethod
     def name() -> str:
         return "brute-force"
@@ -30,13 +33,14 @@ class BruteForceOptimizer(OptimizerInterface):
     def save(self, path_without_file_extension: str) -> None:
         # save to a file in the path
         with open(path_without_file_extension + ".json", "w") as file:
+            self.__logger.info(f"Saving model to {path_without_file_extension}.json")
             file.write(json.dumps(dataclasses.asdict(self.__best_run)))
 
     def load(self, path: str, path_to_save_locally) -> None:
         with open(path + ".json") as file:
             run = json.loads(file.read())
-            self.__best_run = Configuration(**run)
-            self.save(path_to_save_locally + ".json")
+        self.__best_run = Configuration(**run)
+        self.save(path_to_save_locally)
 
     def run(self, sys_info: SystemInfo) -> Configuration:
         return self.__best_run

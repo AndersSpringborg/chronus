@@ -110,6 +110,13 @@ class FakeApplication(ApplicationRunnerInterface):
 
 
 class FakeBencmarkRepository(RepositoryInterface):
+    def get_all_system_info(self) -> list[SystemInfo]:
+        return [
+            SystemInfo(
+                cpu_name="Fake CPU", cores=4, frequencies=[1.0, 2.0, 3.0], threads_per_core=1
+            )
+        ]
+
     called_save_run = 0
     runs: list[Run]
 

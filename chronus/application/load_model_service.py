@@ -25,14 +25,22 @@ class LoadModelService:
         self.__local_settings_path = "/etc/chronus/settings.json"
 
     def run(self):
+        self.__ensure_etc_chronus_is_created()
+
         model = self.repository.get_model(self.model_id)
         self.optimizer.load(model.path_to_model, self.__local_model_path)
         self.__logger.info(f"Loaded model {model.name} from {model.path_to_model} to local machine")
 
-        # mkdirs for /etc/chronus/model if it doesn't exist
-        os.makedirs(os.path.dirname(self.__local_model_path), exist_ok=True)
         settings_to_load = LocalSettings(loaded_model=model)
 
         # save model id to /etc/chronus/model
-        with open(self.__local_model_path, "w") as f:
+        with open(self.__local_settings_path, "w") as f:
             f.write(settings_to_load.to_json())
+
+    def __ensure_etc_chronus_is_created(self):
+        self.__logger.info("This is installing the model system wide (requires root)")
+        try:
+            os.makedirs(os.path.dirname(self.__local_model_path), exist_ok=True)
+        except PermissionError:
+            self.__logger.error("Permission denied to create /etc/chronus. Please run as root.")
+            raise

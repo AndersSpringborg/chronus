@@ -20,10 +20,9 @@ def test_init_model_saves_model_to_repo(tmp_path):
     # arrange
     repository = FakeBencmarkRepository()
     optimizer = FakeOptimizer(return_id=1)
-    sys_info = FakeCpuInfoService()
 
     # act
-    model_service = InitModelService(repository, optimizer, sys_info)
+    model_service = InitModelService(repository, optimizer, 0)
     model_service.run()
 
     # assert

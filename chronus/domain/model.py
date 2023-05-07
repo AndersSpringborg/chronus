@@ -10,5 +10,5 @@ class Model:
     system_info: SystemInfo
     path_to_model: str
     type: str  # Nordjyske bank
-    created_at: datetime
+    created_at: datetime.datetime
     id: int = None

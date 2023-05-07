@@ -20,7 +20,7 @@ class OptimizerInterface:
     def load(self, path: str, path_to_save_locally) -> None:
         pass
 
-    def run(self, sys_info: SystemInfo) -> Configuration:
+    def run(self, path_local_model: str) -> Configuration:
         pass
 
 
