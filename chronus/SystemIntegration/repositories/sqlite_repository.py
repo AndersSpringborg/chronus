@@ -85,9 +85,19 @@ GET_ALL_BENCHMARKS_QUERY = "SELECT * FROM benchmarks;"
 GET_BENCHMARK_RUNS_QUERY = "SELECT * FROM runs WHERE benchmark_id = ?;"
 GET_ALL_RUNS_QUERY = "SELECT * FROM runs;"
 GET_ALL_SYSTEM_SAMPLES_QUERY = "SELECT * FROM system_samples WHERE run_id = ?;"
+GET_ALL_RUNS_QUERY_FILTER_SYSTEM = (
+    "SELECT r.* FROM runs r JOIN benchmarks b on b.id = r.benchmark_id WHERE b.system_info = ?;"
+)
 
 
 class SqliteRepository(RepositoryInterface):
+    def get_all_runs_from_system(self, system_info) -> list[Run]:
+        print("get_all_runs_from_system")
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            rows = cursor.execute(GET_ALL_RUNS_QUERY_FILTER_SYSTEM, (str(system_info),))
+            return [self.__create_run_from_row(row) for row in rows]
+
     def save_benchmark(self, benchmark: Benchmark) -> int:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
@@ -141,35 +151,41 @@ class SqliteRepository(RepositoryInterface):
             else:
                 rows = cursor.execute(GET_BENCHMARK_RUNS_QUERY, (benchmark_id,))
             for row in rows:
-                (
-                    run_id,
-                    _,
-                    cpu,
-                    cores,
-                    thread_per_core,
-                    frequency,
-                    gflops,
-                    flop,
-                    energy_used,
-                    gflops_per_watt,
-                    start_time,
-                    end_time,
-                ) = row
-
-                run = Run()
-                run.cpu = cpu
-                run.cores = int(cores)
-                run.threads_per_core = int(thread_per_core)
-                run.frequency = float(frequency)
-                run.gflops = float(gflops)
-                run.flop = float(flop)
-                run.__energy_used_joules = float(energy_used)
-                run.__gflops_per_watt = float(gflops_per_watt)
-                run.samples = self._get_system_samples(run_id=run_id)
+                run = self.__create_run_from_row(row)
                 runs.append(run)
         return runs
 
+    def __create_run_from_row(self, row):
+        print(row)
+        (
+            run_id,
+            _,
+            cpu,
+            cores,
+            thread_per_core,
+            frequency,
+            gflops,
+            flop,
+            energy_used,
+            gflops_per_watt,
+            start_time,
+            end_time,
+        ) = row
+        run = Run()
+        run.cpu = cpu
+        run.cores = int(cores)
+        run.threads_per_core = int(thread_per_core)
+        run.frequency = float(frequency)
+        run.gflops = float(gflops)
+        run.flop = float(flop)
+        run.__energy_used_joules = float(energy_used)
+        run.__gflops_per_watt = float(gflops_per_watt)
+        run.samples = self._get_system_samples(run_id=run_id)
+        return run
+
     def save_run(self, run: Run) -> None:
+        if run.benchmark_id is None:
+            raise ValueError("The run must be associated with a benchmark.")
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             cursor.execute(

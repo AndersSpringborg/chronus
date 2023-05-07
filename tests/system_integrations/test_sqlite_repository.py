@@ -190,3 +190,57 @@ def test_benchmark_have_runs(sqlite_db):
     # Assert
     saved_benchmark = repo.get_all_benchmarks()[0]
     assert len(saved_benchmark.runs) == 2
+
+
+def test_saving_benchmark_saves_runs(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    benchmark = Benchmark(application="test", system_info=SystemInfo(cores=2), id=1)
+    run1 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+    run2 = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+
+    # Act
+    benchmark.add_run(run1)
+    benchmark.add_run(run2)
+    repo.save_benchmark(benchmark)
+
+    # Assert
+    saved_benchmark = repo.get_all_benchmarks()[0]
+    assert len(saved_benchmark.runs) == 2
+
+
+def test_cannot_save_runs_without_benchmark_id(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    run = Run(cpu="test", cores=2, frequency=1.5, gflops=30.0, flop=30.0e9)
+
+    # Act
+    with pytest.raises(ValueError):
+        repo.save_run(run)
+
+
+def test_getting_runs_from_a_specific_system(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    print(sqlite_db)
+    sys1 = SystemInfo(cpu_name="sys1")
+    benchmark1 = Benchmark(id=1, system_info=sys1, application="")
+    benchmark1.add_run(Run(cpu="run1"))
+
+    sys2 = SystemInfo(cpu_name="sys2")
+    benchmark2 = Benchmark(
+        id=2,
+        system_info=sys2,
+        application="",
+    )
+    benchmark2.add_run(Run(cpu="run2"))
+
+    repo.save_benchmark(benchmark1)
+    repo.save_benchmark(benchmark2)
+
+    # Act
+    runs = repo.get_all_runs_from_system(sys2)
+
+    # Assert
+    assert len(runs) == 1
+    assert runs[0].cpu == "run2"
