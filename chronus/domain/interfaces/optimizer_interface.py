@@ -9,7 +9,6 @@ class OptimizerInterface:
         pass
 
     def name(self) -> str:
-        print(self.__class__.name())
         return self.__class__.name()
 
     def make_model(self, runs: list[Run]) -> None:

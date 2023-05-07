@@ -137,14 +137,16 @@ def init_model(
     ),
 ):
     logger.info("Initializing model of type %s", model.name)
-    model_service = InitModelService(
+    making_model = InitModelService(
         repository=SqliteRepository(db_path),
         optimizer=_choose_optimizer(model),
         system_info_provider=LsCpuInfoService(),
     )
 
     with console.status("training model", spinner="dots12"):
-        new_model = model_service.run()
+        new_model_id = making_model.run()
+
+    logger.info("Model trained with id %s", new_model_id)
 
 
 @app.command(name="slurm-config")

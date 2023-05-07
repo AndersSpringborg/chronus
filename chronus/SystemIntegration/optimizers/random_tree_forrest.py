@@ -10,7 +10,6 @@ class RandomTreeOptimizer(OptimizerInterface):
         return "random-tree"
 
     def make_model(self, runs: list[Run]):
-        print("RandomTreeOptimizer.make_model")
         import numpy as np
         from sklearn.model_selection import train_test_split
 

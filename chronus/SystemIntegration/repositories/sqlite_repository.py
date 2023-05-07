@@ -92,7 +92,6 @@ GET_ALL_RUNS_QUERY_FILTER_SYSTEM = (
 
 class SqliteRepository(RepositoryInterface):
     def get_all_runs_from_system(self, system_info) -> list[Run]:
-        print("get_all_runs_from_system")
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             rows = cursor.execute(GET_ALL_RUNS_QUERY_FILTER_SYSTEM, (str(system_info),))
@@ -156,7 +155,6 @@ class SqliteRepository(RepositoryInterface):
         return runs
 
     def __create_run_from_row(self, row):
-        print(row)
         (
             run_id,
             _,

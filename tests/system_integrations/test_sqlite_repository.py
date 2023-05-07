@@ -222,7 +222,6 @@ def test_cannot_save_runs_without_benchmark_id(sqlite_db):
 def test_getting_runs_from_a_specific_system(sqlite_db):
     # Arrange
     repo = SqliteRepository(sqlite_db)
-    print(sqlite_db)
     sys1 = SystemInfo(cpu_name="sys1")
     benchmark1 = Benchmark(id=1, system_info=sys1, application="")
     benchmark1.add_run(Run(cpu="run1"))
