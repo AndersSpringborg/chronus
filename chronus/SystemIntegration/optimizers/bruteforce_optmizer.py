@@ -3,6 +3,7 @@ import json
 from dataclasses import dataclass
 
 from chronus.domain.configuration import Configuration
+from chronus.domain.cpu_info import CpuInfo
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.Run import Run
 
@@ -37,7 +38,7 @@ class BruteForceOptimizer(OptimizerInterface):
             run = json.loads(file.read())
             self.__best_run = Configuration(**run)
 
-    def get_best_conf(self) -> Configuration:
+    def run(self, sys_info: CpuInfo) -> Configuration:
         return self.__best_run
 
 

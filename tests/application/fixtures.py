@@ -10,6 +10,7 @@ from chronus.domain.interfaces.application_runner_interface import ApplicationRu
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.interfaces.system_service_interface import SystemServiceInterface
+from chronus.domain.model import Model
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 
@@ -109,6 +110,18 @@ class FakeApplication(ApplicationRunnerInterface):
 
 
 class FakeBencmarkRepository(RepositoryInterface):
+    def get_all_runs(self) -> list[Run]:
+        return []
+
+    def get_all_runs_from_system(self, system_info) -> list[Run]:
+        return []
+
+    def get_all_benchmarks(self) -> list[Benchmark]:
+        return []
+
+    def save_model(self, model: Model) -> int:
+        return 1
+
     called_save_run = 0
     runs: list[Run]
 

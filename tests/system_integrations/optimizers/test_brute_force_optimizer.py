@@ -1,4 +1,5 @@
 from chronus.domain.configuration import Configuration
+from chronus.domain.cpu_info import CpuInfo
 from chronus.domain.Run import Run
 from chronus.SystemIntegration.optimizers.bruteforce_optmizer import BruteForceOptimizer
 
@@ -12,11 +13,12 @@ def test_saves_and_loads_the_values_from_file(tmp_path):
     path = str(tmp_path / "best_run.txt")
     optimizer = BruteForceOptimizer()
     optimizer.make_model(runs)
+    system = CpuInfo(cores=1, threads_per_core=1, frequencies=[1])
 
     # Act
     optimizer.save(path)
     optimizer.load(path)
-    best_run = optimizer.get_best_conf()
+    best_run = optimizer.run(system)
 
     # Assert
     assert best_run == expected_best_run
