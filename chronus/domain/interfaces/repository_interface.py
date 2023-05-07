@@ -10,6 +10,9 @@ class RepositoryInterface:
     def get_all_runs(self) -> list[Run]:
         pass
 
+    def get_all_runs_from_system(self, system_info) -> list[Run]:
+        pass
+
     def save_benchmark(self, benchmark: Benchmark) -> int:
         pass
 
