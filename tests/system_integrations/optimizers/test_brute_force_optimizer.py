@@ -14,11 +14,12 @@ def test_saves_and_loads_the_values_from_file(tmp_path):
     optimizer.make_model(runs)
     system = SystemInfo(cores=1, threads_per_core=1, frequencies=[1])
     path = str(tmp_path / str(hash(system)))
+    path_local_model = str(tmp_path / "local_model")
 
     # Act
     optimizer.save(path)
-    optimizer.load(path)
-    best_run = optimizer.run(system)
+    optimizer.load(path, path_local_model)
+    best_run = optimizer.run(path_local_model)
 
     # Assert
     assert best_run == expected_best_run
