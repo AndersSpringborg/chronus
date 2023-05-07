@@ -32,11 +32,11 @@ class BruteForceOptimizer(OptimizerInterface):
         with open(path_without_file_extension + ".json", "w") as file:
             file.write(json.dumps(dataclasses.asdict(self.__best_run)))
 
-    def load(self, optimizer_id: str) -> None:
-        # load from a file in the path
-        with open(optimizer_id + ".json") as file:
+    def load(self, path: str, path_to_save_locally) -> None:
+        with open(path + ".json") as file:
             run = json.loads(file.read())
             self.__best_run = Configuration(**run)
+            self.save(path_to_save_locally + ".json")
 
     def run(self, sys_info: SystemInfo) -> Configuration:
         return self.__best_run

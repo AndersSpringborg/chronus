@@ -17,7 +17,7 @@ class OptimizerInterface:
     def save(self, path_without_file_extension: str) -> None:
         pass
 
-    def load(self, path: str) -> None:
+    def load(self, path: str, path_to_save_locally) -> None:
         pass
 
     def run(self, sys_info: SystemInfo) -> Configuration:
