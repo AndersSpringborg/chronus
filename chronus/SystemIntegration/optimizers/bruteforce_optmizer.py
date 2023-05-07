@@ -42,8 +42,10 @@ class BruteForceOptimizer(OptimizerInterface):
         self.__best_run = Configuration(**run)
         self.save(path_to_save_locally)
 
-    def run(self, sys_info: SystemInfo) -> Configuration:
-        return self.__best_run
+    def run(self, path_local_model: str) -> Configuration:
+        with open(path_local_model + ".json") as file:
+            run = json.loads(file.read())
+        return Configuration(**run)
 
 
 def energy_efficiency(run: Run) -> float:

@@ -1,20 +1,16 @@
 import logging
 import os
 
-from chronus.domain.interfaces.settings_interface import LocalStorageInterface
+from chronus.domain.interfaces.settings_interface import LocalStorageInterface, Permission
 from chronus.domain.LocalSettings import LocalSettings
 
 
 class EtcLocalStorage(LocalStorageInterface):
-    def save_settings(self, settings: LocalSettings):
-        with open(self.__local_settings_path, "w") as f:
-            f.write(settings.to_json())
-
-    def get_full_path(self, relative_path: str):
-        return self.__local_root + relative_path
-
-    def __init__(self):
+    def __init__(self, mode: Permission):
         self.__logger = logging.getLogger(__name__)
+
+        if mode == Permission.WRITE:
+            self.__ensure_etc_chronus_is_created()
 
         self.__local_root = "/etc/chronus"
         self.__local_settings_path = "/etc/chronus/settings.json"
@@ -26,3 +22,14 @@ class EtcLocalStorage(LocalStorageInterface):
         except PermissionError:
             self.__logger.error("Permission denied to create /etc/chronus. Please run as root.")
             raise
+
+    def save_settings(self, settings: LocalSettings):
+        with open(self.__local_settings_path, "w") as f:
+            f.write(settings.to_json())
+
+    def get_settings(self) -> LocalSettings:
+        with open(self.__local_settings_path) as f:
+            return LocalSettings.from_json(f.read())
+
+    def get_full_path(self, relative_path: str):
+        return self.__local_root + relative_path

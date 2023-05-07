@@ -1,3 +1,4 @@
+import dataclasses
 import json
 import logging
 import os
@@ -14,8 +15,10 @@ from chronus import version
 from chronus.application.benchmark_service import BenchmarkService
 from chronus.application.init_model_service import InitModelService
 from chronus.application.load_model_service import LoadModelService
+from chronus.application.run_model_service import RunModelService
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
+from chronus.domain.interfaces.settings_interface import Permission
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
 from chronus.SystemIntegration.optimizers.bruteforce_optmizer import BruteForceOptimizer
@@ -227,7 +230,14 @@ def load_model(
 
 @app.command(name="slurm-config")
 def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
-    run_model = RunModelService(cpu=cpu, application_name="hpcg")
+    local_storage = EtcLocalStorage(Permission.READ)
+    optimizer_type = local_storage.get_settings().loaded_model.type
+    run_model = RunModelService(
+        optimizer=_choose_optimizer(optimizer_type), local_storage=local_storage
+    )
+    conf = run_model.run()
+
+    console.print(json.dumps(dataclasses.asdict(conf)))
 
 
 # add partician compute
