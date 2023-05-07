@@ -11,7 +11,9 @@ from tests.fixtures import datetime_from_string
 
 @pytest.fixture
 def sqlite_db(tmp_path):
-    return tmp_path / "test.db"
+    path = tmp_path / "test.db"
+    path.touch()
+    return path
 
 
 def test_if_table_exists_and_empty(sqlite_db):

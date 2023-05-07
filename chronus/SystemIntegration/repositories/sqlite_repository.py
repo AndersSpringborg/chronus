@@ -1,4 +1,5 @@
 import logging
+import os
 import sqlite3
 from datetime import datetime
 
@@ -15,7 +16,6 @@ CREATE TABLE IF NOT EXISTS benchmarks (
     created_at TEXT
 );
 """
-
 
 CREATE_RUNS_TABLE_QUERY = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -47,7 +47,6 @@ CREATE TABLE IF NOT EXISTS system_samples (
 );
 """
 
-
 INSERT_BENCHMARK_QUERY = """
 INSERT INTO benchmarks (
     system_info,
@@ -55,7 +54,6 @@ INSERT INTO benchmarks (
     created_at
 ) VALUES (?, ?, ?);
 """
-
 
 INSERT_RUN_QUERY = """
 INSERT INTO runs (
@@ -72,7 +70,6 @@ INSERT INTO runs (
     end_time
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
-
 
 INSERT_SYSTEM_SAMPLE_QUERY = """
 INSERT INTO system_samples (
@@ -131,6 +128,7 @@ class SqliteRepository(RepositoryInterface):
     def __init__(self, path: str):
         self.logger = logging.getLogger(__name__)
         self.path = path
+
         self._create_table()
 
     def get_all_runs(self, benchmark_id: int = None) -> list[Run]:
@@ -208,6 +206,10 @@ class SqliteRepository(RepositoryInterface):
         self.logger.info(f"Run data has been saved to {self.path}.")
 
     def _create_table(self) -> None:
+        if not self.__check_db_exists():
+            self.logger.info(f"Database already exists at {self.path}.")
+            if not self.__ask_to_create_one():
+                raise Exception("Database does not exist, and user chose not to create one.")
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             cursor.execute(CREATE_BENCHMARKS_TABLE_QUERY)
@@ -231,3 +233,9 @@ class SqliteRepository(RepositoryInterface):
                 )
                 samples.append(sample)
         return samples
+
+    def __check_db_exists(self):
+        return os.path.exists(self.path)
+
+    def __ask_to_create_one(self):
+        return input(f"Create database at {self.path}? (y/n): ").lower() == "y"
