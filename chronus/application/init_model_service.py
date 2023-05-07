@@ -8,6 +8,7 @@
 import logging
 from pprint import pprint
 
+from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.model import Model
@@ -16,29 +17,42 @@ from chronus.domain.model import Model
 
 
 class ModelService:
-    def __init__(self, repository: RepositoryInterface, optimizer: OptimizerInterface):
+    repository: RepositoryInterface
+    optimizer: OptimizerInterface
+
+    def __init__(
+        self,
+        repository: RepositoryInterface,
+        optimizer: OptimizerInterface,
+        system_info_provider: CpuInfoServiceInterface,
+    ):
         self.repository = repository
         self.optimizer = optimizer
-        self._logger = logging.getLogger(__name__)
+        self.system_info_provider = system_info_provider
+        self.__logger = logging.getLogger(__name__)
 
     def load_model(self):
         pass
 
-    def run(self):
-        self._logger.info("Initializing model getting data")
-        runs = self.repository.get_all_runs()
+    def run(self, path) -> int:
+        self.__logger.info("Initializing model getting data")
+        system = self.system_info_provider.get_cpu_info()
+        runs = self.repository.get_all_runs_from_system(system)
 
-        self._logger.info("Initializing model training model")
+        self.__logger.info("Initializing model training model")
+        self.optimizer.make_model(runs)
+        self.optimizer.save(path)
 
-        optimizer = self.optimizer.make_model(runs)
-
-        optimizer.save_local_on_machine("path/to/model")  # blob
         model = Model(
             name="model_name",
-            optimizer=optimizer,
+            system_info=system,
+            type=self.optimizer.name,
+            path_to_model="path/to/model",
+            created_at="2021-01-01",
         )
 
         model_id = self.repository.save_model(model)
+        self.__logger.info(f"Initializing model saving model with id {model_id}")
 
         return model_id
 

@@ -1,7 +1,7 @@
 from chronus.application.init_model_service import ModelService
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.Run import Run
-from tests.application.fixtures import FakeBencmarkRepository
+from tests.application.fixtures import FakeBencmarkRepository, FakeCpuInfoService
 
 
 class FakeOptimizer(OptimizerInterface):
@@ -12,15 +12,16 @@ class FakeOptimizer(OptimizerInterface):
         return
 
 
-def test_model_service_returns_id_on_save():
+def test_model_service_returns_id_on_save(tmp_path):
     # arrange
     repository = FakeBencmarkRepository()
     optimizer = FakeOptimizer(return_id=1)
+    sys_info = FakeCpuInfoService()
 
-    model_service = ModelService(repository, optimizer)
+    model_service = ModelService(repository, optimizer, sys_info)
 
     # act
-    id = model_service.run()
+    model_id = model_service.run(str(tmp_path / "optimizer"))
 
     # assert
-    assert id == 1
+    assert model_id == 1
