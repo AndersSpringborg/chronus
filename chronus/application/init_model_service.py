@@ -7,6 +7,7 @@
 # - pure ModelService
 import logging
 import os
+from datetime import datetime
 
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
@@ -50,7 +51,7 @@ class InitModelService:
             system_info=system,
             type=self.optimizer.name(),
             path_to_model="path/to/model",
-            created_at="2021-01-01",
+            created_at=datetime.now(),
         )
 
         model_id = self.repository.save_model(model)
