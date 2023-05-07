@@ -6,28 +6,28 @@ from chronus.domain.Run import Run
 
 class RepositoryInterface:
     def save_run(self, run: Run) -> None:
-        pass
+        raise NotImplementedError()
 
     def get_all_runs(self) -> list[Run]:
-        pass
+        raise NotImplementedError()
 
     def get_all_runs_from_system(self, system_info) -> list[Run]:
-        pass
+        raise NotImplementedError()
 
     def save_benchmark(self, benchmark: Benchmark) -> int:
-        pass
+        raise NotImplementedError()
 
     def get_all_benchmarks(self) -> list[Benchmark]:
-        pass
+        raise NotImplementedError()
 
     def get_all_system_info(self) -> list[SystemInfo]:
-        pass
+        raise NotImplementedError()
 
     def save_model(self, model: Model) -> int:
-        pass
+        raise NotImplementedError()
 
     def get_all_models(self) -> list[Model]:
-        pass
+        raise NotImplementedError()
 
     def get_model(self, model_id: int) -> Model:
-        pass
+        raise NotImplementedError()
