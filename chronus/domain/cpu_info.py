@@ -2,7 +2,10 @@ from typing import List
 
 from dataclasses import dataclass
 
+import dataclasses_json
 
+
+@dataclasses_json.dataclass_json
 @dataclass
 class SystemInfo:
     """Returns the number of cores in the system. If the system has hyperthreading, this method should return the

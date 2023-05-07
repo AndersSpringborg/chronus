@@ -24,11 +24,11 @@ class InitModelService:
         self,
         repository: RepositoryInterface,
         optimizer: OptimizerInterface,
-        system_info_provider: CpuInfoServiceInterface,
+        system_id: int,
     ):
         self.repository = repository
         self.optimizer = optimizer
-        self.system_info_provider = system_info_provider
+        self.system_id = system_id
         self.__logger = logging.getLogger(__name__)
         self.__optimizer_dir = "optimizer"
 
@@ -37,7 +37,7 @@ class InitModelService:
 
     def run(self) -> int:
         self.__logger.info("Initializing model getting data")
-        system = self.system_info_provider.get_cpu_info()
+        system = self.__get_system()
         runs = self.repository.get_all_runs_from_system(system)
 
         self.__logger.info("Initializing model training model")
@@ -59,3 +59,12 @@ class InitModelService:
 
     def list_models(self):
         pass
+
+    def __get_system(self):
+        systems = self.repository.get_all_system_info()
+        for i, system in enumerate(systems):
+            if i == self.system_id:
+                self.__logger.info(f"Using system {system}")
+                return system
+
+        raise ValueError(f"System with id {self.system_id} not found")

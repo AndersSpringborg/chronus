@@ -243,3 +243,26 @@ def test_getting_runs_from_a_specific_system(sqlite_db):
     # Assert
     assert len(runs) == 1
     assert runs[0].cpu == "run2"
+
+
+def test_get_all_system_info(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    sys1 = SystemInfo(cpu_name="sys1")
+    benchmark1 = Benchmark(id=1, system_info=sys1, application="")
+    sys2 = SystemInfo(cpu_name="sys2")
+    benchmark2 = Benchmark(
+        id=2,
+        system_info=sys2,
+        application="",
+    )
+    repo.save_benchmark(benchmark1)
+    repo.save_benchmark(benchmark2)
+
+    # Act
+    systems = repo.get_all_system_info()
+
+    # Assert
+    assert len(systems) == 2
+    assert systems[0].cpu_name == "sys1"
+    assert systems[1].cpu_name == "sys2"

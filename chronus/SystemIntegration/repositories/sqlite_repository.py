@@ -4,6 +4,7 @@ import sqlite3
 from datetime import datetime
 
 from chronus.domain.benchmark import Benchmark
+from chronus.domain.cpu_info import SystemInfo
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
@@ -88,13 +89,14 @@ GET_ALL_SYSTEM_SAMPLES_QUERY = "SELECT * FROM system_samples WHERE run_id = ?;"
 GET_ALL_RUNS_QUERY_FILTER_SYSTEM = (
     "SELECT r.* FROM runs r JOIN benchmarks b on b.id = r.benchmark_id WHERE b.system_info = ?;"
 )
+GET_ALL_SYSTEMS_QUERY = "SELECT DISTINCT system_info FROM benchmarks;"
 
 
 class SqliteRepository(RepositoryInterface):
     def get_all_runs_from_system(self, system_info) -> list[Run]:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
-            rows = cursor.execute(GET_ALL_RUNS_QUERY_FILTER_SYSTEM, (str(system_info),))
+            rows = cursor.execute(GET_ALL_RUNS_QUERY_FILTER_SYSTEM, (system_info.to_json(),))
             return [self.__create_run_from_row(row) for row in rows]
 
     def save_benchmark(self, benchmark: Benchmark) -> int:
@@ -103,7 +105,7 @@ class SqliteRepository(RepositoryInterface):
             cursor.execute(
                 INSERT_BENCHMARK_QUERY,
                 (
-                    str(benchmark.system_info),
+                    benchmark.system_info.to_json(),
                     benchmark.application,
                     benchmark.created_at.isoformat(),
                 ),
@@ -117,6 +119,12 @@ class SqliteRepository(RepositoryInterface):
 
         self.logger.info(f"Benchmark data has been saved to {self.path}.")
         return benchmark_id
+
+    def get_all_system_info(self) -> list[SystemInfo]:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_ALL_SYSTEMS_QUERY)
+            return [SystemInfo.from_json(row[0]) for row in cursor.fetchall()]
 
     def get_all_benchmarks(self) -> list[Benchmark]:
         benchmarks = []

@@ -8,6 +8,7 @@ from time import sleep
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.table import Table
 
 from chronus import version
 from chronus.application.benchmark_service import BenchmarkService
@@ -112,9 +113,9 @@ def main(
 
 
 class Model(str, Enum):
-    brute_force = "brute_force"
-    linear_regression = "linear_regression"
-    random_tree = "random_tree"
+    brute_force = BruteForceOptimizer.name()
+    linear_regression = LinearRegressionOptimizer.name()
+    random_tree = RandomTreeOptimizer.name()
 
 
 def _choose_optimizer(model: Model) -> OptimizerInterface:
@@ -135,18 +136,41 @@ def init_model(
         "--database",
         help="The path to the database.",
     ),
+    system_id: int = typer.Option(
+        -1,
+        "--system",
+        help="The id of the system to use.",
+    ),
 ):
+    repo = SqliteRepository(db_path)
+    if system_id == -1:
+        console.print("[yellow]You need to choose a system to train a model.[/yellow]")
+        console.print("[green]Here are the available systems:[/green]")
+        present_systems(repo)
+
+        raise typer.Exit()
+
     logger.info("Initializing model of type %s", model.name)
     making_model = InitModelService(
-        repository=SqliteRepository(db_path),
+        system_id=system_id,
+        repository=repo,
         optimizer=_choose_optimizer(model),
-        system_info_provider=LsCpuInfoService(),
     )
 
     with console.status("training model", spinner="dots12"):
         new_model_id = making_model.run()
 
     logger.info("Model trained with id %s", new_model_id)
+
+
+def present_systems(repo):
+    systems = repo.get_all_system_info()
+    table = Table(title="Available Systems", style="green")
+    table.add_column("ID", justify="center", style="cyan")
+    table.add_column("DataClass", justify="center", style="magenta")
+    for i, system in enumerate(systems):
+        table.add_row(str(i), str(system))
+    console.print(table)
 
 
 @app.command(name="slurm-config")
