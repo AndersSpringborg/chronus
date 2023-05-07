@@ -6,7 +6,7 @@
 #  - train model
 # - pure ModelService
 import logging
-from pprint import pprint
+import os
 
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
@@ -41,6 +41,7 @@ class InitModelService:
         runs = self.repository.get_all_runs_from_system(system)
 
         self.__logger.info("Initializing model training model")
+        self.__ensure_optimizer_dir()
         self.optimizer.make_model(runs)
         self.optimizer.save(self.__optimizer_dir + "/" + str(hash(self.optimizer)))
 
@@ -68,3 +69,7 @@ class InitModelService:
                 return system
 
         raise ValueError(f"System with id {self.system_id} not found")
+
+    def __ensure_optimizer_dir(self):
+        if not os.path.isdir(self.__optimizer_dir):
+            os.mkdir(self.__optimizer_dir)

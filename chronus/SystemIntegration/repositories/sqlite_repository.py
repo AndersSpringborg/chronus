@@ -6,6 +6,7 @@ from datetime import datetime
 from chronus.domain.benchmark import Benchmark
 from chronus.domain.cpu_info import SystemInfo
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
+from chronus.domain.model import Model
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 
@@ -48,6 +49,18 @@ CREATE TABLE IF NOT EXISTS system_samples (
 );
 """
 
+
+CREATE_MODEL_TABLE_QUERY = """
+CREATE TABLE IF NOT EXISTS models (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    system_info TEXT,
+    path_to_model TEXT,
+    type TEXT,
+    created_at TEXT
+);
+"""
+
 INSERT_BENCHMARK_QUERY = """
 INSERT INTO benchmarks (
     system_info,
@@ -82,6 +95,16 @@ INSERT INTO system_samples (
 ) VALUES (?, ?, ?, ?, ?);
 """
 
+INSERT_MODEL_QUERY = """
+INSERT INTO models (
+    name,
+    system_info,
+    path_to_model,
+    type,
+    created_at
+) VALUES (?, ?, ?, ?, ?);
+"""
+
 GET_ALL_BENCHMARKS_QUERY = "SELECT * FROM benchmarks;"
 GET_BENCHMARK_RUNS_QUERY = "SELECT * FROM runs WHERE benchmark_id = ?;"
 GET_ALL_RUNS_QUERY = "SELECT * FROM runs;"
@@ -90,14 +113,57 @@ GET_ALL_RUNS_QUERY_FILTER_SYSTEM = (
     "SELECT r.* FROM runs r JOIN benchmarks b on b.id = r.benchmark_id WHERE b.system_info = ?;"
 )
 GET_ALL_SYSTEMS_QUERY = "SELECT DISTINCT system_info FROM benchmarks;"
+GET_ALL_MODELS_QUERY = "SELECT * FROM models;"
 
 
 class SqliteRepository(RepositoryInterface):
+    def get_all_models(self) -> list[Model]:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_ALL_MODELS_QUERY)
+            return [self.__create_model_from_row(row) for row in cursor.fetchall()]
+
+    def save_model(self, model: Model) -> int:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                INSERT_MODEL_QUERY,
+                (
+                    model.name,
+                    model.system_info.to_json(),
+                    model.path_to_model,
+                    model.type,
+                    model.created_at.isoformat(),
+                ),
+            )
+            model_id = cursor.lastrowid
+            conn.commit()
+        self.logger.info(f"Model data has been saved to {self.path}.")
+        return model_id
+
     def get_all_runs_from_system(self, system_info) -> list[Run]:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             rows = cursor.execute(GET_ALL_RUNS_QUERY_FILTER_SYSTEM, (system_info.to_json(),))
             return [self.__create_run_from_row(row) for row in rows]
+
+    def __create_model_from_row(self, row) -> Model:
+        (
+            model_id,
+            name,
+            system_info,
+            path_to_model,
+            type,
+            created_at,
+        ) = row
+        return Model(
+            id=model_id,
+            name=name,
+            system_info=SystemInfo.from_json(system_info),
+            path_to_model=path_to_model,
+            type=type,
+            created_at=datetime.fromisoformat(created_at),
+        )
 
     def save_benchmark(self, benchmark: Benchmark) -> int:
         with sqlite3.connect(self.path) as conn:
@@ -237,6 +303,7 @@ class SqliteRepository(RepositoryInterface):
             cursor.execute(CREATE_BENCHMARKS_TABLE_QUERY)
             cursor.execute(CREATE_RUNS_TABLE_QUERY)
             cursor.execute(CREATE_SYSTEM_SAMPLES_TABLE_QUERY)
+            cursor.execute(CREATE_MODEL_TABLE_QUERY)
         self.logger.info(
             f"Tables 'benchmarks', 'runs', and 'system_samples' have been created in {self.path}."
         )
