@@ -110,28 +110,18 @@ class FakeApplication(ApplicationRunnerInterface):
 
 
 class FakeBencmarkRepository(RepositoryInterface):
-    def get_all_runs(self) -> list[Run]:
-        return []
-
-    def get_all_runs_from_system(self, system_info) -> list[Run]:
-        return []
-
-    def get_all_benchmarks(self) -> list[Benchmark]:
-        return []
-
-    def save_model(self, model: Model) -> int:
-        return 1
-
     called_save_run = 0
     runs: list[Run]
 
     called_save_benchmark = 0
     benchmarks: list[Benchmark]
+    models: list[Model]
 
     def __init__(self, benchmark: Benchmark = None):
         self.runs = []
         self.benchmarks = []
         self._benchmark = benchmark
+        self.models = []
 
     def save_run(self, run: Run) -> None:
         self.called_save_run += 1
@@ -143,3 +133,19 @@ class FakeBencmarkRepository(RepositoryInterface):
         if self._benchmark is not None:
             return self._benchmark.id
         return benchmark.id
+
+    def get_all_runs(self) -> list[Run]:
+        return []
+
+    def get_all_runs_from_system(self, system_info) -> list[Run]:
+        return []
+
+    def get_all_benchmarks(self) -> list[Benchmark]:
+        return []
+
+    def save_model(self, model: Model) -> int:
+        self.models.append(model)
+        return 1
+
+    def get_all_models(self) -> list[Model]:
+        return self.models

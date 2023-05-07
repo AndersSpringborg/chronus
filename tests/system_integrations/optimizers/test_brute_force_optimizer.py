@@ -10,10 +10,10 @@ def test_saves_and_loads_the_values_from_file(tmp_path):
     run.__gflops_per_watt = 1.0
     runs = [run]
     expected_best_run = Configuration(cores=1, threads_per_core=1, frequency=1)
-    path = str(tmp_path / "best_run.txt")
     optimizer = BruteForceOptimizer()
     optimizer.make_model(runs)
     system = CpuInfo(cores=1, threads_per_core=1, frequencies=[1])
+    path = str(tmp_path / str(hash(system)))
 
     # Act
     optimizer.save(path)

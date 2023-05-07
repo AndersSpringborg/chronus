@@ -21,3 +21,6 @@ class RepositoryInterface:
 
     def save_model(self, model: Model) -> int:
         pass
+
+    def get_all_models(self) -> list[Model]:
+        pass

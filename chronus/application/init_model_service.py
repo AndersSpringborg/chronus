@@ -16,7 +16,7 @@ from chronus.domain.model import Model
 # - test/train?
 
 
-class ModelService:
+class InitModelService:
     repository: RepositoryInterface
     optimizer: OptimizerInterface
 
@@ -30,23 +30,24 @@ class ModelService:
         self.optimizer = optimizer
         self.system_info_provider = system_info_provider
         self.__logger = logging.getLogger(__name__)
+        self.__optimizer_dir = "optimizer"
 
     def load_model(self):
         pass
 
-    def run(self, path) -> int:
+    def run(self) -> int:
         self.__logger.info("Initializing model getting data")
         system = self.system_info_provider.get_cpu_info()
         runs = self.repository.get_all_runs_from_system(system)
 
         self.__logger.info("Initializing model training model")
         self.optimizer.make_model(runs)
-        self.optimizer.save(path)
+        self.optimizer.save(self.__optimizer_dir + "/" + str(hash(self.optimizer)))
 
         model = Model(
             name="model_name",
             system_info=system,
-            type=self.optimizer.name,
+            type=self.optimizer.name(),
             path_to_model="path/to/model",
             created_at="2021-01-01",
         )

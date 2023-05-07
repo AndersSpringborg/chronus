@@ -27,14 +27,14 @@ class BruteForceOptimizer(OptimizerInterface):
                 self.__best_run.threads_per_core = run.threads_per_core
                 self.__best_run.frequency = run.frequency
 
-    def save(self, path: str) -> None:
+    def save(self, path_without_file_extension: str) -> None:
         # save to a file in the path
-        with open(path + ".json", "w") as file:
+        with open(path_without_file_extension + ".json", "w") as file:
             file.write(json.dumps(dataclasses.asdict(self.__best_run)))
 
-    def load(self, path: str) -> None:
+    def load(self, optimizer_id: str) -> None:
         # load from a file in the path
-        with open(path + ".json") as file:
+        with open(optimizer_id + ".json") as file:
             run = json.loads(file.read())
             self.__best_run = Configuration(**run)
 
