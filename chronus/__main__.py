@@ -3,6 +3,7 @@ import logging
 import os
 from enum import Enum
 from random import choice
+from time import sleep
 
 import typer
 from rich.console import Console
@@ -10,7 +11,7 @@ from rich.logging import RichHandler
 
 from chronus import version
 from chronus.application.benchmark_service import BenchmarkService
-from chronus.application.init_model_service import ModelService
+from chronus.application.init_model_service import InitModelService
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
@@ -136,9 +137,10 @@ def init_model(
     ),
 ):
     logger.info("Initializing model of type %s", model.name)
-    model_service = ModelService(
+    model_service = InitModelService(
         repository=SqliteRepository(db_path),
         optimizer=_choose_optimizer(model),
+        system_info_provider=LsCpuInfoService(),
     )
 
     with console.status("training model", spinner="dots12"):
@@ -170,7 +172,7 @@ def run(
 
     hpcg.run(cores, frequency, threads_per_core)
     while hpcg.is_running():
-        await asyncio.sleep(2)
+        sleep(1)
 
     print(hpcg.gflops)
 
