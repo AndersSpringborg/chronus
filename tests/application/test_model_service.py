@@ -1,10 +1,20 @@
 from chronus.application.init_model_service import InitModelService
+from chronus.domain.configuration import Configuration
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.Run import Run
 from tests.application.fixtures import FakeBencmarkRepository, FakeCpuInfoService
 
 
 class FakeOptimizer(OptimizerInterface):
+    def save(self, path_without_file_extension: str) -> None:
+        pass
+
+    def load(self, path: str, path_to_save_locally) -> None:
+        pass
+
+    def run(self, path_local_model: str) -> Configuration:
+        pass
+
     @staticmethod
     def name() -> str:
         return "fake-optimizer"
