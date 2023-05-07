@@ -114,9 +114,16 @@ GET_ALL_RUNS_QUERY_FILTER_SYSTEM = (
 )
 GET_ALL_SYSTEMS_QUERY = "SELECT DISTINCT system_info FROM benchmarks;"
 GET_ALL_MODELS_QUERY = "SELECT * FROM models;"
+GET_MODEL_BY_ID_QUERY = "SELECT * FROM models WHERE id = ?;"
 
 
 class SqliteRepository(RepositoryInterface):
+    def get_model(self, model_id: int) -> Model:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_MODEL_BY_ID_QUERY, (model_id,))
+            return self.__create_model_from_row(cursor.fetchone())
+
     def get_all_models(self) -> list[Model]:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()

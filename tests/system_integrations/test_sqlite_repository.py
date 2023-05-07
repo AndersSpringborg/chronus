@@ -292,3 +292,28 @@ def test_save_and_load_model(sqlite_db):
     assert saved_model.path_to_model == "test"
     assert saved_model.type == "brute-test"
     assert saved_model.created_at == datetime_from_string("2020-01-01 00:00:1")
+
+
+def test_get_model_by_id(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    sys = SystemInfo(cpu_name="sys1")
+    model = Model(
+        name="test",
+        system_info=sys,
+        path_to_model="test",
+        type="brute-test",
+        created_at=datetime_from_string("2020-01-01 00:00:1"),
+    )
+    model_id = repo.save_model(model)
+
+    # Act
+    saved_model = repo.get_model(model_id)
+
+    # Assert
+    assert saved_model.name == "test"
+    assert saved_model.id == model_id
+    assert saved_model.system_info.cpu_name == "sys1"
+    assert saved_model.path_to_model == "test"
+    assert saved_model.type == "brute-test"
+    assert saved_model.created_at == datetime_from_string("2020-01-01 00:00:1")

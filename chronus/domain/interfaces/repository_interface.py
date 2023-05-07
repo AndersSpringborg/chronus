@@ -24,3 +24,6 @@ class RepositoryInterface:
 
     def get_all_models(self) -> list[Model]:
         pass
+
+    def get_model(self, model_id: int) -> Model:
+        pass
