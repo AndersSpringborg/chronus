@@ -6,6 +6,7 @@ import os
 
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
+from chronus.domain.interfaces.settings_interface import LocalStorageInterface
 from chronus.domain.LocalSettings import LocalSettings
 
 
@@ -14,33 +15,23 @@ class LoadModelService:
         self,
         repository: RepositoryInterface,
         optimizer: OptimizerInterface,
+        local_storage: LocalStorageInterface,
         model_id: int,
     ):
         self.repository = repository
         self.optimizer = optimizer
         self.model_id = model_id
+        self.local_storage = local_storage
         self.__logger = logging.getLogger(__name__)
 
-        self.__local_model_path = "/etc/chronus/model"
-        self.__local_settings_path = "/etc/chronus/settings.json"
+        self.__model_file_name = "model"
 
     def run(self):
-        self.__ensure_etc_chronus_is_created()
-
         model = self.repository.get_model(self.model_id)
-        self.optimizer.load(model.path_to_model, self.__local_model_path)
+        full_model_path = self.local_storage.get_full_path(self.__model_file_name)
+        self.optimizer.load(model.path_to_model, full_model_path)
         self.__logger.info(f"Loaded model {model.name} from {model.path_to_model} to local machine")
 
         settings_to_load = LocalSettings(loaded_model=model)
 
-        # save model id to /etc/chronus/model
-        with open(self.__local_settings_path, "w") as f:
-            f.write(settings_to_load.to_json())
-
-    def __ensure_etc_chronus_is_created(self):
-        self.__logger.info("This is installing the model system wide (requires root)")
-        try:
-            os.makedirs(os.path.dirname(self.__local_model_path), exist_ok=True)
-        except PermissionError:
-            self.__logger.error("Permission denied to create /etc/chronus. Please run as root.")
-            raise
+        self.local_storage.save_settings(settings_to_load)

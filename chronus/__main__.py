@@ -22,6 +22,7 @@ from chronus.SystemIntegration.optimizers.bruteforce_optmizer import BruteForceO
 from chronus.SystemIntegration.optimizers.linear_regression import LinearRegressionOptimizer
 from chronus.SystemIntegration.optimizers.random_tree_forrest import RandomTreeOptimizer
 from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
+from chronus.SystemIntegration.settings_interface.etc_storage import EtcLocalStorage
 from chronus.SystemIntegration.system_service_interfaces.ipmi_system_service import (
     IpmiSystemService,
 )
@@ -216,19 +217,17 @@ def load_model(
     model = repo.get_model(model_id)
 
     load_model = LoadModelService(
-        model_id=model_id, repository=repo, optimizer=_choose_optimizer(model.type)
+        model_id=model_id,
+        repository=repo,
+        optimizer=_choose_optimizer(model.type),
+        local_storage=EtcLocalStorage(),
     )
     load_model.run()
 
 
 @app.command(name="slurm-config")
 def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
-    config = {
-        "cores": 2,
-        "frequency": 2_200_000,
-    }
-
-    print(json.dumps(config))
+    run_model = RunModelService(cpu=cpu, application_name="hpcg")
 
 
 # add partician compute
