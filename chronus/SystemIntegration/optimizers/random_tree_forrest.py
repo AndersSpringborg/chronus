@@ -5,6 +5,10 @@ from chronus.domain.Run import Run
 
 
 class RandomTreeOptimizer(OptimizerInterface):
+    @staticmethod
+    def name() -> str:
+        return "random-tree"
+
     def make_model(self, runs: list[Run]):
         print("RandomTreeOptimizer.make_model")
         import numpy as np

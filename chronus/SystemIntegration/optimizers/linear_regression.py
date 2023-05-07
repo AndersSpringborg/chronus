@@ -9,6 +9,10 @@ from chronus.domain.Run import Run
 
 
 class LinearRegressionOptimizer(OptimizerInterface):
+    @staticmethod
+    def name() -> str:
+        return "linear-regression"
+
     def make_model(self, runs: list[Run]):
         df = runs_to_dataframe(runs)
 

@@ -8,6 +8,10 @@ from chronus.domain.Run import Run
 
 
 class BruteForceOptimizer(OptimizerInterface):
+    @staticmethod
+    def name() -> str:
+        return "brute-force"
+
     __best_run: Configuration = None
 
     def make_model(self, runs: list[Run]) -> None:
@@ -29,7 +33,7 @@ class BruteForceOptimizer(OptimizerInterface):
 
     def load(self, path: str) -> None:
         # load from a file in the path
-        with open(path + ".json", "r") as file:
+        with open(path + ".json") as file:
             run = json.loads(file.read())
             self.__best_run = Configuration(**run)
 
