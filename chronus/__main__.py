@@ -115,8 +115,14 @@ def main(
         is_eager=True,
         help="Prints the version of the chronus package.",
     ),
+    debug: bool = typer.Option(
+        False,
+        "--debug",
+        help="Print debug information to logs.",
+    ),
 ) -> None:
-    pass
+    if debug:
+        logger.setLevel(logging.DEBUG)
 
 
 class Model(str, Enum):
