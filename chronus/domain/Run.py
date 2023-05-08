@@ -37,8 +37,6 @@ class Run:
             return 1.0
 
         total_power_draw = self.energy_used_joules
-        print(self.start_time)
-        print(self.end_time)
         total_time = (self.end_time - self.start_time).total_seconds()
         return total_power_draw / total_time
 
