@@ -35,7 +35,12 @@ class Run:
     def _average_power_draw(self) -> float:
         if len(self.samples) == 0:
             return 1.0
-        return sum([sample.current_power_draw for sample in self.samples]) / len(self.samples)
+
+        total_power_draw = self.energy_used_joules
+        print(self.start_time)
+        print(self.end_time)
+        total_time = (self.end_time - self.start_time).total_seconds()
+        return total_power_draw / total_time
 
     def finish(self, end_time: datetime.datetime = None):
         self.end_time = end_time or datetime.datetime.now()
