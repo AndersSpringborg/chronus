@@ -251,6 +251,7 @@ class SqliteRepository(RepositoryInterface):
             end_time,
         ) = row
         run = Run()
+        run.id = run_id
         run.cpu = cpu
         run.cores = int(cores)
         run.threads_per_core = int(thread_per_core)
@@ -337,3 +338,16 @@ class SqliteRepository(RepositoryInterface):
 
     def __ask_to_create_one(self):
         return input(f"Create database at {self.path}? (y/n): ").lower() == "y"
+
+    def fix_db(self):
+        runs = self.get_all_runs()
+        with sqlite3.connect(self.path) as conn:
+            for run in runs:
+                glfops_per_watt = run.gflops_per_watt
+                SQL_UPDATE = (
+                    f"UPDATE runs SET gflops_per_watt = {glfops_per_watt} WHERE id = {run.id}"
+                )
+                cursor = conn.cursor()
+                cursor.execute(SQL_UPDATE)
+                conn.commit()
+                self.logger.info(f"Database has been fixed at {self.path}.")
