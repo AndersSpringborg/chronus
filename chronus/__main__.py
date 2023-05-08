@@ -16,6 +16,7 @@ from chronus.application.benchmark_service import BenchmarkService
 from chronus.application.init_model_service import InitModelService
 from chronus.application.load_model_service import LoadModelService
 from chronus.application.run_model_service import RunModelService
+from chronus.domain.configuration import Configuration
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.interfaces.settings_interface import Permission
@@ -263,19 +264,11 @@ def run(
 @app.command(name="benchmark")
 def benchmark(
     hpcg_path: str,
-    print_version: bool = typer.Option(
+    configurations_path: str = typer.Option(
         None,
-        "-v",
-        "--version",
-        callback=version_callback,
-        is_eager=True,
-        help="Prints the version of the chronus package.",
-    ),
-    debug: bool = typer.Option(
-        False,
-        "-d",
-        "--debug",
-        help="Print debug information.",
+        "--configurations",
+        "-c",
+        help="The path to the file containing the configurations.",
     ),
     db_path: str = typer.Option(
         "data.db",
@@ -284,17 +277,21 @@ def benchmark(
         help="The path to the database.",
     ),
 ):
-    if debug:
-        logging.getLogger().setLevel(logging.DEBUG)
-
     full_path = os.path.abspath(hpcg_path)
-    called_from_dir = os.getcwd()
     benchmark_service = BenchmarkService(
         cpu_info_service=LsCpuInfoService(),
         application_runner=HpcgService(full_path),
         benchmark_repository=SqliteRepository(db_path),
         system_service=IpmiSystemService(),
     )
+
+    if configurations_path:
+        configurations = []
+        with open(configurations_path) as f:
+            configurations = json.loads(f.read())
+        configurations = [Configuration(**c) for c in configurations]
+
+        benchmark_service.set_configurations(configurations)
 
     benchmark_service.run()
 

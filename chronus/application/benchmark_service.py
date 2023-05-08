@@ -2,7 +2,7 @@ import logging
 import time
 
 from chronus.domain.benchmark import Benchmark
-from chronus.domain.configuration import Configurations
+from chronus.domain.configuration import Configuration, Configurations
 from chronus.domain.interfaces.application_runner_interface import ApplicationRunnerInterface
 from chronus.domain.interfaces.cpu_info_service_interface import CpuInfoServiceInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
@@ -30,6 +30,7 @@ class BenchmarkService:
         system_service: SystemServiceInterface,
         benchmark_repository: RepositoryInterface,
     ):
+        self.__configurations: list[Configuration] = None
         self.energy_used = 0.0
         self.cpu_info_service = cpu_info_service
         self.application_runner = application_runner
@@ -44,8 +45,9 @@ class BenchmarkService:
         benchmark = Benchmark(system_info=cpu, application="HPCG")
         benchmark_id = self.repository.save_benchmark(benchmark)
 
-        configurations = Configurations(cpu)
-        for configuration in configurations:
+        if self.__configurations is None:
+            self.__configurations = Configurations(cpu)
+        for configuration in self.__configurations:
             self.logger.info(
                 f"Starting benchmark for {cpu.cpu_name} with {configuration.cores} cores, {configuration.frequency / 1.0e6} GHz and {configuration.threads_per_core} threads per core"
             )
@@ -66,6 +68,9 @@ class BenchmarkService:
                 )
             finally:
                 self.application_runner.cleanup()
+
+    def set_configurations(self, configurations: [Configuration]):
+        self.__configurations = configurations
 
     def _wait_for_application_to_finish_and_save_run(self, configuration, cpu, run):
         while self.application_runner.is_running():

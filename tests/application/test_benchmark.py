@@ -161,10 +161,7 @@ def test_calls_cleanup_when_application_raises_job_error(skip_sleep, caplog):
     benchmark.run()
 
     # Assert
-    assert (
-        "ERROR    chronus.application.benchmark_service:benchmark_service.py:64 Job failed with config 1 cores, 1e-06 GHz and 1 threads per core\n"
-        in caplog.text
-    )
+    assert "Job failed with config 1 cores, 1e-06 GHz and 1 threads per core\n" in caplog.text
 
 
 def test_logger_outputs_config_on_job_failure(skip_sleep):

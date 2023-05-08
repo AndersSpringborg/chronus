@@ -13,7 +13,7 @@ class Run:
     cpu: str = ""
     cores: int = 0
     threads_per_core: int = 1
-    frequency: int = 0.0
+    frequency: int = 0
     gflops: float = 0.0
     flop: float = 0.0
     start_time: datetime.datetime = None
