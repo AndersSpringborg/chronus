@@ -1,6 +1,6 @@
-from chronus.domain.cpu_info import CpuInfo
+from chronus.domain.cpu_info import SystemInfo
 
 
 class CpuInfoServiceInterface:
-    def get_cpu_info(self) -> CpuInfo:
-        pass
+    def get_cpu_info(self) -> SystemInfo:
+        raise NotImplementedError()

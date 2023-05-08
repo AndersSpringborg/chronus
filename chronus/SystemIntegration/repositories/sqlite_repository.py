@@ -1,9 +1,12 @@
 import logging
+import os
 import sqlite3
 from datetime import datetime
 
 from chronus.domain.benchmark import Benchmark
+from chronus.domain.cpu_info import SystemInfo
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
+from chronus.domain.model import Model
 from chronus.domain.Run import Run
 from chronus.domain.system_sample import SystemSample
 
@@ -15,7 +18,6 @@ CREATE TABLE IF NOT EXISTS benchmarks (
     created_at TEXT
 );
 """
-
 
 CREATE_RUNS_TABLE_QUERY = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -48,6 +50,17 @@ CREATE TABLE IF NOT EXISTS system_samples (
 """
 
 
+CREATE_MODEL_TABLE_QUERY = """
+CREATE TABLE IF NOT EXISTS models (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    system_info TEXT,
+    path_to_model TEXT,
+    type TEXT,
+    created_at TEXT
+);
+"""
+
 INSERT_BENCHMARK_QUERY = """
 INSERT INTO benchmarks (
     system_info,
@@ -55,7 +68,6 @@ INSERT INTO benchmarks (
     created_at
 ) VALUES (?, ?, ?);
 """
-
 
 INSERT_RUN_QUERY = """
 INSERT INTO runs (
@@ -73,7 +85,6 @@ INSERT INTO runs (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 
-
 INSERT_SYSTEM_SAMPLE_QUERY = """
 INSERT INTO system_samples (
     run_id,
@@ -84,20 +95,90 @@ INSERT INTO system_samples (
 ) VALUES (?, ?, ?, ?, ?);
 """
 
+INSERT_MODEL_QUERY = """
+INSERT INTO models (
+    name,
+    system_info,
+    path_to_model,
+    type,
+    created_at
+) VALUES (?, ?, ?, ?, ?);
+"""
+
 GET_ALL_BENCHMARKS_QUERY = "SELECT * FROM benchmarks;"
 GET_BENCHMARK_RUNS_QUERY = "SELECT * FROM runs WHERE benchmark_id = ?;"
 GET_ALL_RUNS_QUERY = "SELECT * FROM runs;"
 GET_ALL_SYSTEM_SAMPLES_QUERY = "SELECT * FROM system_samples WHERE run_id = ?;"
+GET_ALL_RUNS_QUERY_FILTER_SYSTEM = (
+    "SELECT r.* FROM runs r JOIN benchmarks b on b.id = r.benchmark_id WHERE b.system_info = ?;"
+)
+GET_ALL_SYSTEMS_QUERY = "SELECT DISTINCT system_info FROM benchmarks;"
+GET_ALL_MODELS_QUERY = "SELECT * FROM models;"
+GET_MODEL_BY_ID_QUERY = "SELECT * FROM models WHERE id = ?;"
 
 
 class SqliteRepository(RepositoryInterface):
+    def get_model(self, model_id: int) -> Model:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_MODEL_BY_ID_QUERY, (model_id,))
+            return self.__create_model_from_row(cursor.fetchone())
+
+    def get_all_models(self) -> list[Model]:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_ALL_MODELS_QUERY)
+            return [self.__create_model_from_row(row) for row in cursor.fetchall()]
+
+    def save_model(self, model: Model) -> int:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                INSERT_MODEL_QUERY,
+                (
+                    model.name,
+                    model.system_info.to_json(),
+                    model.path_to_model,
+                    model.type,
+                    model.created_at.isoformat(),
+                ),
+            )
+            model_id = cursor.lastrowid
+            conn.commit()
+        self.logger.info(f"Model data has been saved to {self.path}.")
+        return model_id
+
+    def get_all_runs_from_system(self, system_info) -> list[Run]:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            rows = cursor.execute(GET_ALL_RUNS_QUERY_FILTER_SYSTEM, (system_info.to_json(),))
+            return [self.__create_run_from_row(row) for row in rows]
+
+    def __create_model_from_row(self, row) -> Model:
+        (
+            model_id,
+            name,
+            system_info,
+            path_to_model,
+            type,
+            created_at,
+        ) = row
+        return Model(
+            id=model_id,
+            name=name,
+            system_info=SystemInfo.from_json(system_info),
+            path_to_model=path_to_model,
+            type=type,
+            created_at=datetime.fromisoformat(created_at),
+        )
+
     def save_benchmark(self, benchmark: Benchmark) -> int:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 INSERT_BENCHMARK_QUERY,
                 (
-                    str(benchmark.system_info),
+                    benchmark.system_info.to_json(),
                     benchmark.application,
                     benchmark.created_at.isoformat(),
                 ),
@@ -111,6 +192,12 @@ class SqliteRepository(RepositoryInterface):
 
         self.logger.info(f"Benchmark data has been saved to {self.path}.")
         return benchmark_id
+
+    def get_all_system_info(self) -> list[SystemInfo]:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(GET_ALL_SYSTEMS_QUERY)
+            return [SystemInfo.from_json(row[0]) for row in cursor.fetchall()]
 
     def get_all_benchmarks(self) -> list[Benchmark]:
         benchmarks = []
@@ -131,6 +218,7 @@ class SqliteRepository(RepositoryInterface):
     def __init__(self, path: str):
         self.logger = logging.getLogger(__name__)
         self.path = path
+
         self._create_table()
 
     def get_all_runs(self, benchmark_id: int = None) -> list[Run]:
@@ -143,35 +231,40 @@ class SqliteRepository(RepositoryInterface):
             else:
                 rows = cursor.execute(GET_BENCHMARK_RUNS_QUERY, (benchmark_id,))
             for row in rows:
-                (
-                    run_id,
-                    _,
-                    cpu,
-                    cores,
-                    thread_per_core,
-                    frequency,
-                    gflops,
-                    flop,
-                    energy_used,
-                    gflops_per_watt,
-                    start_time,
-                    end_time,
-                ) = row
-
-                run = Run()
-                run.cpu = cpu
-                run.cores = int(cores)
-                run.threads_per_core = int(thread_per_core)
-                run.frequency = float(frequency)
-                run.gflops = float(gflops)
-                run.flop = float(flop)
-                run._energy_used_joules = float(energy_used)
-                run._gflops_per_watt = float(gflops_per_watt)
-                run._samples = self._get_system_samples(run_id=run_id)
+                run = self.__create_run_from_row(row)
                 runs.append(run)
         return runs
 
+    def __create_run_from_row(self, row):
+        (
+            run_id,
+            _,
+            cpu,
+            cores,
+            thread_per_core,
+            frequency,
+            gflops,
+            flop,
+            energy_used,
+            gflops_per_watt,
+            start_time,
+            end_time,
+        ) = row
+        run = Run()
+        run.cpu = cpu
+        run.cores = int(cores)
+        run.threads_per_core = int(thread_per_core)
+        run.frequency = float(frequency)
+        run.gflops = float(gflops)
+        run.flop = float(flop)
+        run.__energy_used_joules = float(energy_used)
+        run.__gflops_per_watt = float(gflops_per_watt)
+        run.samples = self._get_system_samples(run_id=run_id)
+        return run
+
     def save_run(self, run: Run) -> None:
+        if run.benchmark_id is None:
+            raise ValueError("The run must be associated with a benchmark.")
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -193,7 +286,7 @@ class SqliteRepository(RepositoryInterface):
             run_id = cursor.lastrowid
 
             # Save system samples associated with the run
-            for sample in run._samples:
+            for sample in run.samples:
                 cursor.execute(
                     INSERT_SYSTEM_SAMPLE_QUERY,
                     (
@@ -208,11 +301,16 @@ class SqliteRepository(RepositoryInterface):
         self.logger.info(f"Run data has been saved to {self.path}.")
 
     def _create_table(self) -> None:
+        if not self.__check_db_exists():
+            self.logger.info(f"Database already exists at {self.path}.")
+            if not self.__ask_to_create_one():
+                raise Exception("Database does not exist, and user chose not to create one.")
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
             cursor.execute(CREATE_BENCHMARKS_TABLE_QUERY)
             cursor.execute(CREATE_RUNS_TABLE_QUERY)
             cursor.execute(CREATE_SYSTEM_SAMPLES_TABLE_QUERY)
+            cursor.execute(CREATE_MODEL_TABLE_QUERY)
         self.logger.info(
             f"Tables 'benchmarks', 'runs', and 'system_samples' have been created in {self.path}."
         )
@@ -231,3 +329,9 @@ class SqliteRepository(RepositoryInterface):
                 )
                 samples.append(sample)
         return samples
+
+    def __check_db_exists(self):
+        return os.path.exists(self.path)
+
+    def __ask_to_create_one(self):
+        return input(f"Create database at {self.path}? (y/n): ").lower() == "y"

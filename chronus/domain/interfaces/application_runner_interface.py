@@ -3,21 +3,21 @@ class ApplicationRunnerInterface:
     result: float
 
     def run(self, cores: int, frequency: float, thread_per_core=1):
-        pass
+        raise NotImplementedError()
 
     def is_running(self) -> bool:
-        pass
+        raise NotImplementedError()
 
     """
     This is called before the application is run.
     """
 
     def prepare(self):
-        pass
+        raise NotImplementedError()
 
     """
     This method is called after the application has finished running.
     """
 
     def cleanup(self):
-        pass
+        raise NotImplementedError()

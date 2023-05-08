@@ -1,19 +1,31 @@
+import dataclasses
 import json
 import logging
 import os
 from enum import Enum
 from random import choice
+from time import sleep
 
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.table import Table
 
 from chronus import version
 from chronus.application.benchmark_service import BenchmarkService
-from chronus.application.model_service import ModelService
+from chronus.application.init_model_service import InitModelService
+from chronus.application.load_model_service import LoadModelService
+from chronus.application.run_model_service import RunModelService
+from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
+from chronus.domain.interfaces.repository_interface import RepositoryInterface
+from chronus.domain.interfaces.settings_interface import Permission
 from chronus.SystemIntegration.application_runners.hpcg import HpcgService
 from chronus.SystemIntegration.cpu_info_services.cpu_info_service import LsCpuInfoService
+from chronus.SystemIntegration.optimizers.bruteforce_optmizer import BruteForceOptimizer
+from chronus.SystemIntegration.optimizers.linear_regression import LinearRegressionOptimizer
+from chronus.SystemIntegration.optimizers.random_tree_forrest import RandomTreeOptimizer
 from chronus.SystemIntegration.repositories.sqlite_repository import SqliteRepository
+from chronus.SystemIntegration.settings_interface.etc_storage import EtcLocalStorage
 from chronus.SystemIntegration.system_service_interfaces.ipmi_system_service import (
     IpmiSystemService,
 )
@@ -37,16 +49,15 @@ class FileWithTimeStampHandlerAndLevel(logging.FileHandler):
         super().emit(record)
 
 
+console = Console()
 FORMAT = "%(message)s"
 logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(), FileWithTimeStampHandlerAndLevel("chronus.log")])
-
 
 app = typer.Typer(
     name=name,
     help="A energy scheduling model, build for HPC.",
     add_completion=True,
 )
-console = Console()
 
 
 def version_callback(print_version: bool) -> None:
@@ -95,6 +106,7 @@ class StandardConfig:
 
 FORMAT = "%(message)s"
 logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()])
+logger = logging.getLogger("main")
 
 
 @app.callback()
@@ -111,34 +123,146 @@ def main(
     pass
 
 
+class Model(str, Enum):
+    brute_force = BruteForceOptimizer.name()
+    linear_regression = LinearRegressionOptimizer.name()
+    random_tree = RandomTreeOptimizer.name()
+
+
+def _choose_optimizer(model: str) -> OptimizerInterface:
+    switcher = {
+        BruteForceOptimizer.name(): BruteForceOptimizer(),
+        LinearRegressionOptimizer.name(): LinearRegressionOptimizer(),
+        RandomTreeOptimizer.name(): RandomTreeOptimizer(),
+    }
+    return switcher.get(model, BruteForceOptimizer())
+
+
 @app.command(name="init-model")
 def init_model(
-    model_path: str = typer.Argument(..., help="The path to the model directory."),
-    data_path: str = typer.Argument(..., help="The path to the data directory."),
+    model: Model = Model.linear_regression,
+    db_path: str = typer.Option(
+        "data.db",
+        "--db",
+        "--database",
+        help="The path to the database.",
+    ),
+    system_id: int = typer.Option(
+        -1,
+        "--system",
+        help="The id of the system to use.",
+    ),
 ):
-    abs_model_path = os.path.abspath(model_path)
-    abs_data_path = os.path.abspath(data_path)
-    model_service = ModelService(
-        model_repository=ModelRepository(abs_model_path),
-        data_repository=DataRepository(abs_data_path),
-        model_implementations=LinearRegression(),
+    repo = SqliteRepository(db_path)
+    if system_id == -1:
+        console.print("[yellow]You need to choose a system to train a model.[/yellow]")
+        console.print("[green]Here are the available systems:[/green]")
+        present_systems(repo)
+
+        raise typer.Exit()
+
+    logger.info("Initializing model of type %s", model.name)
+    making_model = InitModelService(
+        system_id=system_id,
+        repository=repo,
+        optimizer=_choose_optimizer(model),
     )
-    model = model_service.init_model()
-    model_service.save_model(model)
-    logging.info("Model saved.")
+
+    with console.status("training model", spinner="dots12"):
+        new_model_id = making_model.run()
+
+    logger.info("Model trained with id %s", new_model_id)
+
+
+def present_systems(repo):
+    systems = repo.get_all_system_info()
+    table = Table(title="Available Systems", style="green")
+    table.add_column("ID", justify="center", style="cyan")
+    table.add_column("DataClass", justify="center", style="magenta")
+    for i, system in enumerate(systems):
+        table.add_row(str(i), str(system))
+    console.print(table)
+
+
+def present_models(repo: RepositoryInterface):
+    models = repo.get_all_models()
+    table = Table(title="Available Models", style="green")
+    table.add_column("ID", justify="center", style="cyan")
+    table.add_column("Type", justify="center", style="magenta")
+    table.add_column("Created", justify="center", style="magenta")
+    table.add_column("System", justify="center", style="magenta")
+    for model in models:
+        table.add_row(
+            str(model.id), model.type, model.created_at.strftime("%d/%m/%Y"), str(model.system_info)
+        )
+    console.print(table)
+
+
+@app.command(name="load-model")
+def load_model(
+    model_id: int = typer.Option(
+        -1,
+        "--model",
+        help="The id of the model to use.",
+    ),
+    db_path: str = typer.Option(
+        "data.db",
+        "--db",
+        "--database",
+        help="The path to the database.",
+    ),
+):
+    repo = SqliteRepository(db_path)
+    if model_id == -1:
+        console.print("[yellow]You need to choose a model to load.[/yellow]")
+        console.print("[green]Here are the available models:[/green]")
+        present_models(repo)
+
+        console.print("[yellow]Specify the model id with --model <id>[/yellow]")
+
+        raise typer.Exit()
+
+    model = repo.get_model(model_id)
+
+    load_model = LoadModelService(
+        model_id=model_id,
+        repository=repo,
+        optimizer=_choose_optimizer(model.type),
+        local_storage=EtcLocalStorage(),
+    )
+    load_model.run()
 
 
 @app.command(name="slurm-config")
 def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
-    config = {
-        "cores": 2,
-        "frequency": 2_200_000,
-    }
+    local_storage = EtcLocalStorage(Permission.READ)
+    optimizer_type = local_storage.get_settings().loaded_model.type
+    run_model = RunModelService(
+        optimizer=_choose_optimizer(optimizer_type), local_storage=local_storage
+    )
+    conf = run_model.run()
 
-    print(json.dumps(config))
+    console.print(json.dumps(dataclasses.asdict(conf)))
 
 
 # add partician compute
+
+
+@app.command(name="run")
+def run(
+    hpcg_path: str,
+    cores: int = typer.Argument(..., help="The number of cores to run on."),
+    frequency: int = typer.Argument(..., help="The frequency to run on."),
+    threads_per_core: int = typer.Argument(..., help="The number of threads to run on."),
+):
+    hpcg = HpcgService(hpcg_path)
+    import asyncio
+
+    hpcg.run(cores, frequency, threads_per_core)
+    while hpcg.is_running():
+        sleep(1)
+
+    print(hpcg.gflops)
 
 
 @app.command(name="benchmark")

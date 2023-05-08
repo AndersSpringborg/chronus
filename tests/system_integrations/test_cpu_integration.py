@@ -33,7 +33,7 @@ def test_parses_model_number_cpu(mock_system_calls):
     cpu_info = LsCpuInfoService().get_cpu_info()
 
     # Assert
-    assert cpu_info.name == "AMD EPYC 7502P 32-Core Processor"
+    assert cpu_info.cpu_name == "AMD EPYC 7502P 32-Core Processor"
 
 
 def test_no_model_number_cpu(mock_system_calls):
@@ -46,7 +46,7 @@ def test_no_model_number_cpu(mock_system_calls):
     cpu_info = LsCpuInfoService().get_cpu_info()
 
     # Assert
-    assert cpu_info.name == "Unknown"
+    assert cpu_info.cpu_name == "Unknown"
 
 
 def test_throws_exception_when_lscpu_fails(mock_system_calls):

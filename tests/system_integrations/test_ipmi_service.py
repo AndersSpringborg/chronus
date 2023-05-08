@@ -59,7 +59,6 @@ def test_gets_power_draw(mock_ipmi):
     sample = ipmi.sample()
 
     # Assert
-    print(mock.call_args_list)
     assert call("Total_Power") in mock.call_args_list
     assert sample.current_power_draw == 20.0
 
