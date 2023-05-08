@@ -260,6 +260,8 @@ class SqliteRepository(RepositoryInterface):
         run.__energy_used_joules = float(energy_used)
         run.__gflops_per_watt = float(gflops_per_watt)
         run.samples = self._get_system_samples(run_id=run_id)
+        run.start_time = datetime.fromisoformat(start_time)
+        run.end_time = datetime.fromisoformat(end_time) if end_time else None
         return run
 
     def save_run(self, run: Run) -> None:
