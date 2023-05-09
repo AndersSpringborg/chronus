@@ -302,6 +302,68 @@ def benchmark(
     benchmark_service.run()
 
 
+@app.command(name="fix-db")
+def fix_db(
+    db_path: str = typer.Option(
+        "data.db",
+        "-db",
+        "--database",
+        help="The path to the database.",
+    ),
+):
+    repo = SqliteRepository(db_path)
+
+    with console.status("fixing db", spinner="dots12") as status:
+        status.update("fixing system samples")
+        repo.fix_system_samples()
+        status.update("fixing gflops per watt")
+        repo.fix_gflops_per_watt()
+
+
+@app.command(name="best-runs")
+def best_runs(
+    db_path: str = typer.Option(
+        "data.db",
+        "-db",
+        "--database",
+        help="The path to the database.",
+    )
+):
+    repo = SqliteRepository(db_path)
+    runs = repo.get_best_runs()
+    table = Table(title="Best Runs", style="green")
+    table.add_column("ID", justify="center", style="cyan")
+    table.add_column("cores", justify="center", style="magenta")
+    table.add_column("frequency", justify="center", style="magenta")
+    table.add_column("threads_per_core", justify="center", style="magenta")
+    table.add_column("efficiency", justify="center", style="magenta")
+    table.add_column("efficiency_%", justify="right", style="green")
+    table.add_column("time_used", justify="center", style="magenta")
+    table.add_column("time_%", justify="right", style="red")
+
+    previous_time = (runs[0].end_time - runs[0].start_time).total_seconds()
+    previous_efficiency = runs[0].efficiency
+    for _run in runs:
+        time_used = (_run.end_time - _run.start_time).total_seconds()
+        time_pct = (time_used / previous_time) * 100
+        previous_time = time_used
+
+        efficiency_pct = (_run.efficiency / previous_efficiency) * 100
+
+        table.add_row(
+            str(_run.run_id),
+            str(_run.cores),
+            str(_run.frequency),
+            str(_run.threads_per_core),
+            f"{_run.efficiency:.2f}",
+            f"{efficiency_pct:.2f}",
+            f"{time_used:.2f}",
+            f"{time_pct:.2f}",
+        )
+
+    console.print(table)
+
+
 # delete output dir if exception
 # error if exists
 # if job failed, continue

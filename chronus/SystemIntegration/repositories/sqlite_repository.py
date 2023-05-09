@@ -397,7 +397,7 @@ class SqliteRepository(RepositoryInterface):
     def __ask_to_create_one(self):
         return input(f"Create database at {self.path}? (y/n): ").lower() == "y"
 
-    def fix_db(self):
+    def fix_gflops_per_watt(self):
         runs = self.get_all_runs()
         with sqlite3.connect(self.path) as conn:
             for run in runs:
@@ -408,7 +408,21 @@ class SqliteRepository(RepositoryInterface):
                 cursor = conn.cursor()
                 cursor.execute(SQL_UPDATE)
                 conn.commit()
-                self.logger.info(f"Run {run.id} has been updated with {glfops_per_watt} GFLOPS/W.")
+        self.logger.info(f"gflops_per_watt has been fixed.")
+
+    def fix_system_samples(self):
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+
+            system_samples = conn.execute("SELECT id, cpu_freq FROM system_samples")
+            for sample in system_samples:
+                sample_id, cpu_freq = sample
+                if cpu_freq is None:
+                    SQL_UPDATE = f"UPDATE system_samples SET cpu_freq = '{json.dumps([])}' WHERE id = {sample_id}"
+                    cursor.execute(SQL_UPDATE)
+
+            conn.commit()
+            self.logger.info("System samples have been fixed.")
 
     def get_best_runs(self) -> list[RunEfficiency]:
         runs_with_efficiency = []
