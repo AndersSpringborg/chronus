@@ -76,7 +76,7 @@ class BenchmarkService:
         while self.application_runner.is_running():
             sample = self.system_service.sample()
             run.add_sample(sample)
-            time.sleep(1)
+            time.sleep(3)
         run.add_sample(self.system_service.sample())
         run.finish()
         run.gflops = self.application_runner.gflops
