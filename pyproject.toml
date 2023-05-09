@@ -40,6 +40,7 @@ scikit-learn = "^1.2.1"
 matplotlib = "^3.7.1"
 dataclasses-json = "^0.5.7"
 pyghmi = "^1.5.61"
+psutil = "^5.9.5"
 
 [tool.poetry.group.model_create.dependencies]
 pandas = "^2.0.1"
