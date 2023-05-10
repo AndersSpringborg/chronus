@@ -33,9 +33,6 @@ class InitModelService:
         self.__logger = logging.getLogger(__name__)
         self.__optimizer_dir = "optimizer"
 
-    def load_model(self):
-        pass
-
     def run(self) -> int:
         self.__logger.info("Initializing model getting data")
         system = self.__get_system()

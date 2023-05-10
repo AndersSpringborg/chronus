@@ -33,4 +33,4 @@ class EtcLocalStorage(LocalStorageInterface):
             return LocalSettings.from_json(f.read())
 
     def get_full_path(self, relative_path: str):
-        return self.__local_root + relative_path
+        return self.__local_root + "/" + relative_path
