@@ -113,3 +113,5 @@ build-remove:
 .PHONY: cleanup
 cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove
 
+.PHONY: publish
+	poetry publish --build --username $PYPI_USERNAME --password $PYPI_PASSWORD
