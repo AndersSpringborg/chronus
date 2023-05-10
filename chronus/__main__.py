@@ -163,7 +163,7 @@ def init_model(
 
         raise typer.Exit()
 
-    logger.info("Initializing model of type %s", model.name)
+    logger.info("Initializing model of type '%s'", model.name)
     making_model = InitModelService(
         system_id=system_id,
         repository=repo,
@@ -226,13 +226,13 @@ def load_model(
 
     model = repo.get_model(model_id)
 
-    load_model = LoadModelService(
+    _load_model = LoadModelService(
         model_id=model_id,
         repository=repo,
         optimizer=_choose_optimizer(model.type),
-        local_storage=EtcLocalStorage(),
+        local_storage=EtcLocalStorage(Permission.WRITE),
     )
-    load_model.run()
+    _load_model.run()
 
 
 @dataclasses.dataclass
