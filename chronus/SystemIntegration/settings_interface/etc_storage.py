@@ -17,9 +17,8 @@ class EtcLocalStorage(LocalStorageInterface):
     def __ensure_etc_chronus_is_created(self):
         self.__logger.info("This is installing the model system wide (requires root)")
         try:
-            path = os.path.dirname(self.__local_root)
-            os.makedirs(path, exist_ok=True)
-            self.__logger.info(f"Created {path}")
+            os.makedirs(self.__local_root, exist_ok=True)
+            self.__logger.info(f"Created {self.__local_root}")
         except PermissionError:
             self.__logger.error("Permission denied to create /etc/chronus. Please run as root.")
             raise
