@@ -19,6 +19,7 @@ class EtcLocalStorage(LocalStorageInterface):
         try:
             path = os.path.dirname(self.__local_root)
             os.makedirs(path, exist_ok=True)
+            self.__logger.info(f"Created {path}")
         except PermissionError:
             self.__logger.error("Permission denied to create /etc/chronus. Please run as root.")
             raise
