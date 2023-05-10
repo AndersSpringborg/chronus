@@ -11,7 +11,6 @@ class EtcLocalStorage(LocalStorageInterface):
         self.__local_root = "/etc/chronus"
         self.__local_settings_path = "/etc/chronus/settings.json"
 
-
         if mode == Permission.WRITE:
             self.__ensure_etc_chronus_is_created()
 
