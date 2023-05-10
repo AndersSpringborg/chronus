@@ -240,7 +240,6 @@ class ConfigDto:
     cores: int
     frequency: int
     threads_per_core: int
-    disable_plug: bool
 
 
 @app.command(name="slurm-config")
@@ -251,13 +250,19 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
         optimizer=_choose_optimizer(optimizer_type), local_storage=local_storage
     )
     conf = run_model.run()
-
-    outgoing = ConfigDto(
-        cores=conf.cores,
-        frequency=conf.frequency,
-        threads_per_core=conf.threads_per_core,
-        disable_plug=True,
-    )
+    disabled = True
+    if disabled:
+        outgoing = ConfigDto(
+            cores=-1,
+            frequency=-1,
+            threads_per_core=-1,
+        )
+    else:
+        outgoing = ConfigDto(
+            cores=conf.cores,
+            frequency=conf.frequency,
+            threads_per_core=conf.threads_per_core,
+        )
     console.print(json.dumps(dataclasses.asdict(outgoing)))
 
 
