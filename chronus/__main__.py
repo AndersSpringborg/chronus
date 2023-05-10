@@ -235,6 +235,14 @@ def load_model(
     load_model.run()
 
 
+@dataclasses.dataclass
+class ConfigDto:
+    cores: int
+    frequency: int
+    threads_per_core: int
+    disable_plug: bool
+
+
 @app.command(name="slurm-config")
 def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the config for")):
     local_storage = EtcLocalStorage(Permission.READ)
@@ -244,7 +252,13 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
     )
     conf = run_model.run()
 
-    console.print(json.dumps(dataclasses.asdict(conf)))
+    outgoing = ConfigDto(
+        cores=conf.cores,
+        frequency=conf.frequency,
+        threads_per_core=conf.threads_per_core,
+        disable_plug=True,
+    )
+    console.print(json.dumps(dataclasses.asdict(outgoing)))
 
 
 # add partician compute
