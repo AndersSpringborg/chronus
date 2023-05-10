@@ -8,17 +8,18 @@ from chronus.domain.LocalSettings import LocalSettings
 class EtcLocalStorage(LocalStorageInterface):
     def __init__(self, mode: Permission):
         self.__logger = logging.getLogger(__name__)
+        self.__local_root = "/etc/chronus"
+        self.__local_settings_path = "/etc/chronus/settings.json"
+
 
         if mode == Permission.WRITE:
             self.__ensure_etc_chronus_is_created()
 
-        self.__local_root = "/etc/chronus"
-        self.__local_settings_path = "/etc/chronus/settings.json"
-
     def __ensure_etc_chronus_is_created(self):
         self.__logger.info("This is installing the model system wide (requires root)")
         try:
-            os.makedirs(os.path.dirname(self.__local_root), exist_ok=True)
+            path = os.path.dirname(self.__local_root)
+            os.makedirs(path, exist_ok=True)
         except PermissionError:
             self.__logger.error("Permission denied to create /etc/chronus. Please run as root.")
             raise
