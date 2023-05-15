@@ -2,13 +2,15 @@ from typing import List
 
 from dataclasses import dataclass
 
+import dataclasses_json
+
 from chronus.domain.cpu_info import SystemInfo
 
 
 @dataclass
 class Configuration:
     cores: int = 0
-    frequency: float = 0.0
+    frequency: int = 0
     threads_per_core: int = 0
 
 
@@ -33,6 +35,7 @@ def make_configurations(cpu_info: SystemInfo) -> list[Configuration]:
     return configurations
 
 
+@dataclasses_json.dataclass_json
 class Configurations:
     def __init__(self, cpu_info: SystemInfo):
         self.__configurations = make_configurations(cpu_info)

@@ -16,6 +16,7 @@ from chronus.application.benchmark_service import BenchmarkService
 from chronus.application.init_model_service import InitModelService
 from chronus.application.load_model_service import LoadModelService
 from chronus.application.run_model_service import RunModelService
+from chronus.domain.configuration import Configuration
 from chronus.domain.interfaces.optimizer_interface import OptimizerInterface
 from chronus.domain.interfaces.repository_interface import RepositoryInterface
 from chronus.domain.interfaces.settings_interface import Permission
@@ -119,8 +120,14 @@ def main(
         is_eager=True,
         help="Prints the version of the chronus package.",
     ),
+    debug: bool = typer.Option(
+        False,
+        "--debug",
+        help="Print debug information to logs.",
+    ),
 ) -> None:
-    pass
+    if debug:
+        logger.setLevel(logging.DEBUG)
 
 
 class Model(str, Enum):
@@ -161,7 +168,7 @@ def init_model(
 
         raise typer.Exit()
 
-    logger.info("Initializing model of type %s", model.name)
+    logger.info("Initializing model of type '%s'", model.name)
     making_model = InitModelService(
         system_id=system_id,
         repository=repo,
@@ -224,13 +231,20 @@ def load_model(
 
     model = repo.get_model(model_id)
 
-    load_model = LoadModelService(
+    _load_model = LoadModelService(
         model_id=model_id,
         repository=repo,
         optimizer=_choose_optimizer(model.type),
-        local_storage=EtcLocalStorage(),
+        local_storage=EtcLocalStorage(Permission.WRITE),
     )
-    load_model.run()
+    _load_model.run()
+
+
+@dataclasses.dataclass
+class ConfigDto:
+    cores: int
+    frequency: int
+    threads_per_core: int
 
 
 @app.command(name="slurm-config")
@@ -241,8 +255,20 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
         optimizer=_choose_optimizer(optimizer_type), local_storage=local_storage
     )
     conf = run_model.run()
-
-    console.print(json.dumps(dataclasses.asdict(conf)))
+    disabled = True
+    if disabled:
+        outgoing = ConfigDto(
+            cores=-1,
+            frequency=-1,
+            threads_per_core=-1,
+        )
+    else:
+        outgoing = ConfigDto(
+            cores=conf.cores,
+            frequency=conf.frequency,
+            threads_per_core=conf.threads_per_core,
+        )
+    console.print(json.dumps(dataclasses.asdict(outgoing)))
 
 
 # add partician compute
@@ -268,19 +294,11 @@ def run(
 @app.command(name="benchmark")
 def benchmark(
     hpcg_path: str,
-    print_version: bool = typer.Option(
+    configurations_path: str = typer.Option(
         None,
-        "-v",
-        "--version",
-        callback=version_callback,
-        is_eager=True,
-        help="Prints the version of the chronus package.",
-    ),
-    debug: bool = typer.Option(
-        False,
-        "-d",
-        "--debug",
-        help="Print debug information.",
+        "--configurations",
+        "-c",
+        help="The path to the file containing the configurations.",
     ),
     db_path: str = typer.Option(
         "data.db",
@@ -289,11 +307,7 @@ def benchmark(
         help="The path to the database.",
     ),
 ):
-    if debug:
-        logging.getLogger().setLevel(logging.DEBUG)
-
     full_path = os.path.abspath(hpcg_path)
-    called_from_dir = os.getcwd()
     benchmark_service = BenchmarkService(
         cpu_info_service=LsCpuInfoService(),
         application_runner=HpcgService(full_path),
@@ -301,7 +315,77 @@ def benchmark(
         system_service=IpmiSystemService(),
     )
 
+    if configurations_path:
+        configurations = []
+        with open(configurations_path) as f:
+            configurations = json.loads(f.read())
+        configurations = [Configuration(**c) for c in configurations]
+
+        benchmark_service.set_configurations(configurations)
+
     benchmark_service.run()
+
+
+@app.command(name="fix-db")
+def fix_db(
+    db_path: str = typer.Option(
+        "data.db",
+        "-db",
+        "--database",
+        help="The path to the database.",
+    ),
+):
+    repo = SqliteRepository(db_path)
+
+    with console.status("fixing db", spinner="dots12") as status:
+        status.update("fixing system samples")
+        repo.fix_system_samples()
+        status.update("fixing gflops per watt")
+        repo.fix_gflops_per_watt()
+
+
+@app.command(name="best-runs")
+def best_runs(
+    db_path: str = typer.Option(
+        "data.db",
+        "-db",
+        "--database",
+        help="The path to the database.",
+    )
+):
+    repo = SqliteRepository(db_path)
+    runs = repo.get_best_runs()
+    table = Table(title="Best Runs", style="green")
+    table.add_column("ID", justify="center", style="cyan")
+    table.add_column("cores", justify="center", style="magenta")
+    table.add_column("frequency", justify="center", style="magenta")
+    table.add_column("threads_per_core", justify="center", style="magenta")
+    table.add_column("efficiency", justify="center", style="magenta")
+    table.add_column("efficiency_%", justify="right", style="green")
+    table.add_column("time_used", justify="center", style="magenta")
+    table.add_column("time_%", justify="right", style="red")
+
+    previous_time = (runs[0].end_time - runs[0].start_time).total_seconds()
+    previous_efficiency = runs[0].efficiency
+    for _run in runs:
+        time_used = (_run.end_time - _run.start_time).total_seconds()
+        time_pct = (time_used / previous_time) * 100
+        previous_time = time_used
+
+        efficiency_pct = (_run.efficiency / previous_efficiency) * 100
+
+        table.add_row(
+            str(_run.run_id),
+            str(_run.cores),
+            str(_run.frequency),
+            str(_run.threads_per_core),
+            f"{_run.efficiency:.2f}",
+            f"{efficiency_pct:.2f}",
+            f"{time_used:.2f}",
+            f"{time_pct:.2f}",
+        )
+
+    console.print(table)
 
 
 # delete output dir if exception

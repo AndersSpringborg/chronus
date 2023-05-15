@@ -29,7 +29,11 @@ class LoadModelService:
     def run(self):
         model = self.repository.get_model(self.model_id)
         full_model_path = self.local_storage.get_full_path(self.__model_file_name)
-        self.optimizer.load(model.path_to_model, full_model_path)
+        try:
+            self.optimizer.load(model.path_to_model, full_model_path)
+        except PermissionError:
+            self.__logger.error("You don't have permission to change the model system wide.")
+            self.__logger.info("Try running it again with sudo")
         self.__logger.info(f"Loaded model {model.name} from {model.path_to_model} to local machine")
 
         settings_to_load = LocalSettings(loaded_model=model)

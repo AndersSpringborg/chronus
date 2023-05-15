@@ -24,10 +24,14 @@
 This is both a library and a CLI application for scheduling energy consumption. The library is build for slurm, and the CLI application is build for the end user.
 
 ## 🚀 Installation
-```
+```shell
 python3 -m pip install chronus
 chronus --help
+
+# To install it with support for making models
+python3 -m pip install chronus[model]
 ```
+
 
 ### Poetry
 

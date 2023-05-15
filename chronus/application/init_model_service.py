@@ -33,9 +33,6 @@ class InitModelService:
         self.__logger = logging.getLogger(__name__)
         self.__optimizer_dir = "optimizer"
 
-    def load_model(self):
-        pass
-
     def run(self) -> int:
         self.__logger.info("Initializing model getting data")
         system = self.__get_system()
@@ -44,14 +41,14 @@ class InitModelService:
         self.__logger.info("Initializing model training model")
         self.__ensure_optimizer_dir()
         self.optimizer.make_model(runs)
-        path_to_model = self.__optimizer_dir + "/" + str(hash(self.optimizer))
-        self.optimizer.save(path_to_model)
+        full_path_to_model = os.path.abspath(self.__optimizer_dir + "/" + str(hash(self.optimizer)))
+        self.optimizer.save(full_path_to_model)
 
         model = Model(
             name="model_name",
             system_info=system,
             type=self.optimizer.name(),
-            path_to_model=path_to_model,
+            path_to_model=full_path_to_model,
             created_at=datetime.now(),
         )
 

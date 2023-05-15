@@ -1,6 +1,8 @@
+import json
 import logging
 import os
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime
 
 from chronus.domain.benchmark import Benchmark
@@ -49,7 +51,6 @@ CREATE TABLE IF NOT EXISTS system_samples (
 );
 """
 
-
 CREATE_MODEL_TABLE_QUERY = """
 CREATE TABLE IF NOT EXISTS models (
     id INTEGER PRIMARY KEY,
@@ -91,8 +92,13 @@ INSERT INTO system_samples (
     timestamp,
     current_power_draw,
     cpu_power,
-    cpu_temp
-) VALUES (?, ?, ?, ?, ?);
+    cpu_temp,
+    cpu_freq
+) VALUES (?, ?, ?, ?, ?, ?);
+"""
+
+ADD_CPUFREQ_TO_SYSTEM_SAMPLE_MIGRATION_QUERY = """
+ALTER TABLE system_samples ADD COLUMN cpu_freq TEXT;
 """
 
 INSERT_MODEL_QUERY = """
@@ -108,13 +114,40 @@ INSERT INTO models (
 GET_ALL_BENCHMARKS_QUERY = "SELECT * FROM benchmarks;"
 GET_BENCHMARK_RUNS_QUERY = "SELECT * FROM runs WHERE benchmark_id = ?;"
 GET_ALL_RUNS_QUERY = "SELECT * FROM runs;"
-GET_ALL_SYSTEM_SAMPLES_QUERY = "SELECT * FROM system_samples WHERE run_id = ?;"
+GET_ALL_SYSTEM_SAMPLES_BY_RUN_ID_QUERY = "SELECT * FROM system_samples WHERE run_id = ?;"
+GET_ALL_SYSTEM_SAMPLES_QUERY = "SELECT * FROM system_samples;"
 GET_ALL_RUNS_QUERY_FILTER_SYSTEM = (
     "SELECT r.* FROM runs r JOIN benchmarks b on b.id = r.benchmark_id WHERE b.system_info = ?;"
 )
 GET_ALL_SYSTEMS_QUERY = "SELECT DISTINCT system_info FROM benchmarks;"
 GET_ALL_MODELS_QUERY = "SELECT * FROM models;"
 GET_MODEL_BY_ID_QUERY = "SELECT * FROM models WHERE id = ?;"
+
+GET_BEST_RUNS_QUERY = """
+SELECT
+    runs.id,
+    runs.cores,
+    runs.thread_per_core,
+    runs.frequency,
+    runs.start_time,
+    runs.end_time,
+    runs.flop / runs.energy_used AS efficiency
+FROM
+    runs
+ORDER BY efficiency DESC
+LIMIT 15
+"""
+
+
+@dataclass
+class RunEfficiency:
+    run_id: int
+    cores: int
+    threads_per_core: int
+    frequency: float
+    start_time: datetime
+    end_time: datetime
+    efficiency: float
 
 
 class SqliteRepository(RepositoryInterface):
@@ -251,6 +284,7 @@ class SqliteRepository(RepositoryInterface):
             end_time,
         ) = row
         run = Run()
+        run.id = run_id
         run.cpu = cpu
         run.cores = int(cores)
         run.threads_per_core = int(thread_per_core)
@@ -259,7 +293,9 @@ class SqliteRepository(RepositoryInterface):
         run.flop = float(flop)
         run.__energy_used_joules = float(energy_used)
         run.__gflops_per_watt = float(gflops_per_watt)
-        run.samples = self._get_system_samples(run_id=run_id)
+        run.samples = self.get_system_samples(run_id=run_id)
+        run.start_time = datetime.fromisoformat(start_time)
+        run.end_time = datetime.fromisoformat(end_time) if end_time else None
         return run
 
     def save_run(self, run: Run) -> None:
@@ -286,19 +322,27 @@ class SqliteRepository(RepositoryInterface):
             run_id = cursor.lastrowid
 
             # Save system samples associated with the run
-            for sample in run.samples:
-                cursor.execute(
-                    INSERT_SYSTEM_SAMPLE_QUERY,
-                    (
-                        run_id,
-                        sample.timestamp,
-                        sample.current_power_draw,
-                        sample.cpu_power,
-                        sample.cpu_temp,
-                    ),
-                )
             conn.commit()
+            for sample in run.samples:
+                self.save_system_sample(run_id, sample)
         self.logger.info(f"Run data has been saved to {self.path}.")
+
+    def save_system_sample(self, run_id, sample):
+        conn = sqlite3.connect(self.path)
+        cursor = conn.cursor()
+        cursor.execute(
+            INSERT_SYSTEM_SAMPLE_QUERY,
+            (
+                run_id,
+                sample.timestamp,
+                sample.current_power_draw,
+                sample.cpu_power,
+                sample.cpu_temp,
+                json.dumps(sample.cpu_freq),
+            ),
+        )
+        conn.commit()
+        conn.close()
 
     def _create_table(self) -> None:
         if not self.__check_db_exists():
@@ -311,27 +355,100 @@ class SqliteRepository(RepositoryInterface):
             cursor.execute(CREATE_RUNS_TABLE_QUERY)
             cursor.execute(CREATE_SYSTEM_SAMPLES_TABLE_QUERY)
             cursor.execute(CREATE_MODEL_TABLE_QUERY)
+
+        self.__run_migration(ADD_CPUFREQ_TO_SYSTEM_SAMPLE_MIGRATION_QUERY)
         self.logger.info(
             f"Tables 'benchmarks', 'runs', and 'system_samples' have been created in {self.path}."
         )
 
-    def _get_system_samples(self, run_id: int) -> list[SystemSample]:
+    def get_system_samples(self, run_id: int) -> list[SystemSample]:
         samples = []
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
-            for row in cursor.execute(GET_ALL_SYSTEM_SAMPLES_QUERY, (run_id,)):
-                _, _, timestamp, current_power_draw, cpu_power, cpu_temp = row
-                sample = SystemSample(
-                    timestamp=datetime.fromisoformat(timestamp),
-                    current_power_draw=current_power_draw,
-                    cpu_power=cpu_power,
-                    cpu_temp=cpu_temp,
-                )
+            for row in cursor.execute(GET_ALL_SYSTEM_SAMPLES_BY_RUN_ID_QUERY, (run_id,)):
+                sample = self.__create_system_sample_from_row(row)
                 samples.append(sample)
         return samples
+
+    def get_all_system_samples(self) -> list[SystemSample]:
+        samples = []
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            for row in cursor.execute(GET_ALL_SYSTEM_SAMPLES_QUERY):
+                sample = self.__create_system_sample_from_row(row)
+                samples.append(sample)
+        return samples
+
+    def __create_system_sample_from_row(self, row) -> SystemSample:
+        _, _, timestamp, current_power_draw, cpu_power, cpu_temp, cpu_freq = row
+        sample = SystemSample(
+            timestamp=datetime.fromisoformat(timestamp),
+            current_power_draw=current_power_draw,
+            cpu_power=cpu_power,
+            cpu_temp=cpu_temp,
+            cpu_freq=json.loads(cpu_freq),
+        )
+
+        return sample
 
     def __check_db_exists(self):
         return os.path.exists(self.path)
 
     def __ask_to_create_one(self):
         return input(f"Create database at {self.path}? (y/n): ").lower() == "y"
+
+    def fix_gflops_per_watt(self):
+        runs = self.get_all_runs()
+        with sqlite3.connect(self.path) as conn:
+            for run in runs:
+                glfops_per_watt = run.gflops_per_watt
+                SQL_UPDATE = (
+                    f"UPDATE runs SET gflops_per_watt = {glfops_per_watt} WHERE id = {run.id}"
+                )
+                cursor = conn.cursor()
+                cursor.execute(SQL_UPDATE)
+                conn.commit()
+        self.logger.info(f"gflops_per_watt has been fixed.")
+
+    def fix_system_samples(self):
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+
+            system_samples = conn.execute("SELECT id, cpu_freq FROM system_samples")
+            for sample in system_samples:
+                sample_id, cpu_freq = sample
+                if cpu_freq is None:
+                    SQL_UPDATE = f"UPDATE system_samples SET cpu_freq = '{json.dumps([])}' WHERE id = {sample_id}"
+                    cursor.execute(SQL_UPDATE)
+
+            conn.commit()
+            self.logger.info("System samples have been fixed.")
+
+    def get_best_runs(self) -> list[RunEfficiency]:
+        runs_with_efficiency = []
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.cursor()
+            for row in cursor.execute(GET_BEST_RUNS_QUERY):
+                run_id, cores, threads_per_core, frequency, start_time, end_time, efficiency = row
+                runs_with_efficiency.append(
+                    RunEfficiency(
+                        run_id=run_id,
+                        cores=cores,
+                        threads_per_core=threads_per_core,
+                        frequency=frequency,
+                        start_time=datetime.fromisoformat(start_time),
+                        end_time=datetime.fromisoformat(end_time),
+                        efficiency=efficiency,
+                    )
+                )
+        return runs_with_efficiency
+
+    def __run_migration(self, SQL_QUERY: str):
+        try:
+            with sqlite3.connect(self.path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(SQL_QUERY)
+                conn.commit()
+        except sqlite3.OperationalError as e:
+            self.logger.info(f"Mirgration already run: {e}")
+            return False

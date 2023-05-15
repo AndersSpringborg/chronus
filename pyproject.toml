@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "chronus"
-version = "0.2.4"
+version = "0.3.6"
 description = "A energy scheduling model, build for HPC."
 readme = "README.md"
 authors = ["chronus <aaspringborg@gmail.com>"]
@@ -40,9 +40,11 @@ scikit-learn = "^1.2.1"
 matplotlib = "^3.7.1"
 dataclasses-json = "^0.5.7"
 pyghmi = "^1.5.61"
+psutil = "^5.9.5"
+pandas = { version = "^2.0.1", extras = ["model"], optional = true }
 
-[tool.poetry.group.model_create.dependencies]
-pandas = "^2.0.1"
+[tool.poetry.extras]
+model = ["pandas"]
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.5"

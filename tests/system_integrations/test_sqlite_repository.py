@@ -317,3 +317,27 @@ def test_get_model_by_id(sqlite_db):
     assert saved_model.path_to_model == "test"
     assert saved_model.type == "brute-test"
     assert saved_model.created_at == datetime_from_string("2020-01-01 00:00:1")
+
+
+def test_and_loads_cpufreq_from_system_sample(sqlite_db):
+    # Arrange
+    repo = SqliteRepository(sqlite_db)
+    print(sqlite_db)
+    sys = SystemSample(
+        cpu_freq=[
+            {"current": 2000, "min": 1000, "max": 3000},
+            {"current": 5000, "min": 4000, "max": 6000},
+        ]
+    )
+
+    # Act
+    repo.save_system_sample(1, sys)
+    saved_sys = repo.get_all_system_samples()[0]
+
+    # Assert
+    assert saved_sys.cpu_freq[0]["current"] == 2000
+    assert saved_sys.cpu_freq[0]["min"] == 1000
+    assert saved_sys.cpu_freq[0]["max"] == 3000
+    assert saved_sys.cpu_freq[1]["current"] == 5000
+    assert saved_sys.cpu_freq[1]["min"] == 4000
+    assert saved_sys.cpu_freq[1]["max"] == 6000

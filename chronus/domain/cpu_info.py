@@ -14,7 +14,7 @@ class SystemInfo:
     cpu_name: str = ""
     cores: int = 0
     threads_per_core: int = 1
-    frequencies: list[float] = None
+    frequencies: list[int] = None
 
     def __hash__(self):
         return hash((self.cpu_name, self.cores, self.threads_per_core, tuple(self.frequencies)))
