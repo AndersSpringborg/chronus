@@ -346,7 +346,7 @@ class SqliteRepository(RepositoryInterface):
 
     def _create_table(self) -> None:
         if not self.__check_db_exists():
-            self.logger.info(f"Database already exists at {self.path}.")
+            self.logger.debug(f"Database already exists at {self.path}.")
             if not self.__ask_to_create_one():
                 raise Exception("Database does not exist, and user chose not to create one.")
         with sqlite3.connect(self.path) as conn:
@@ -357,7 +357,7 @@ class SqliteRepository(RepositoryInterface):
             cursor.execute(CREATE_MODEL_TABLE_QUERY)
 
         self.__run_migration(ADD_CPUFREQ_TO_SYSTEM_SAMPLE_MIGRATION_QUERY)
-        self.logger.info(
+        self.logger.debug(
             f"Tables 'benchmarks', 'runs', and 'system_samples' have been created in {self.path}."
         )
 
@@ -450,5 +450,5 @@ class SqliteRepository(RepositoryInterface):
                 cursor.execute(SQL_QUERY)
                 conn.commit()
         except sqlite3.OperationalError as e:
-            self.logger.info(f"Mirgration already run: {e}")
+            self.logger.debug(f"Mirgration already run: {e}")
             return False
