@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from enum import Enum
+from pathlib import Path
 from random import choice
 from time import sleep
 
@@ -46,13 +47,19 @@ class Color(str, Enum):
 class FileWithTimeStampHandlerAndLevel(logging.FileHandler):
     def emit(self, record: logging.LogRecord) -> None:
         from datetime import datetime
+
         record.msg = f"[{datetime.now().strftime('%H:%M:%S')}] {record.levelname: <7} {record.msg}"
         super().emit(record)
 
 
 console = Console()
 FORMAT = "%(message)s"
-logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(), FileWithTimeStampHandlerAndLevel("chronus.log")])
+logging.basicConfig(
+    level="INFO",
+    format=FORMAT,
+    datefmt="[%X]",
+    handlers=[RichHandler(), FileWithTimeStampHandlerAndLevel("chronus.log")],
+)
 
 app = typer.Typer(
     name=name,
@@ -238,6 +245,48 @@ def load_model(
         local_storage=EtcLocalStorage(Permission.WRITE),
     )
     _load_model.run()
+
+
+settings = typer.Typer()
+
+
+@settings.command(name="database", short_help="The path to the database.")
+def database(
+    path: Path = typer.Argument(
+        "data.db",
+        help="The path to the database.",
+    )
+):
+    pass
+
+
+@settings.command(name="blob-storage", short_help="The path to the blob storage.")
+def blob_storage(
+    path: Path = typer.Argument(
+        "/opt/chronus/data",
+        help="The path to the blob storage.",
+    )
+):
+    pass
+
+
+class States(str, Enum):
+    active = "active"
+    user = "user"
+    inactive = "inactive"
+
+
+@settings.command(name="state", short_help="activates, sets it to user or deactivates the plugin.")
+def state(
+    state: States = typer.Argument(
+        States.inactive,
+        help="activates, sets it to user or deactivates the plugin.",
+    )
+):
+    pass
+
+
+app.add_typer(settings, name="set", help="Manage the settings of the suite.")
 
 
 @dataclasses.dataclass
