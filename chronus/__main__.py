@@ -46,13 +46,19 @@ class Color(str, Enum):
 class FileWithTimeStampHandlerAndLevel(logging.FileHandler):
     def emit(self, record: logging.LogRecord) -> None:
         from datetime import datetime
+
         record.msg = f"[{datetime.now().strftime('%H:%M:%S')}] {record.levelname: <7} {record.msg}"
         super().emit(record)
 
 
 console = Console()
 FORMAT = "%(message)s"
-logging.basicConfig(level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(), FileWithTimeStampHandlerAndLevel("chronus.log")])
+logging.basicConfig(
+    level="INFO",
+    format=FORMAT,
+    datefmt="[%X]",
+    handlers=[RichHandler(), FileWithTimeStampHandlerAndLevel("chronus.log")],
+)
 
 app = typer.Typer(
     name=name,
