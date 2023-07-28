@@ -106,7 +106,8 @@ def test_benchmark_have_result_after_run():
     benchmark.run()
 
     run = repository.runs[0]
-    assert run.flop == operations_done
+    assert run.flop == 100.0
+
 
 
 def test_benchmark_saved_after_each_configuration(skip_sleep):

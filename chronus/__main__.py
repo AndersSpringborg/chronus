@@ -261,7 +261,7 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
         optimizer=_choose_optimizer(optimizer_type), local_storage=local_storage
     )
     conf = run_model.run()
-    disabled = True
+    disabled = False
     if disabled:
         outgoing = ConfigDto(
             cores=-1,
@@ -271,7 +271,7 @@ def get_config(cpu: str = typer.Argument(..., help="The cpu model to get the con
     else:
         outgoing = ConfigDto(
             cores=conf.cores,
-            frequency=conf.frequency,
+            frequency=int(conf.frequency),
             threads_per_core=conf.threads_per_core,
         )
     console.print(json.dumps(dataclasses.asdict(outgoing)))
